@@ -4,5 +4,11 @@
 
 module Go
   class Channel
+    def initialize()
+      @state = :active
+    end
+
+    def close; @state = :closed; end
+    def closed?; @state == :closed; end
   end
 end

@@ -4,8 +4,18 @@ require 'lib/go'
 describe Go::Channel do
   # http://golang.org/doc/go_spec.html#Channel_types
 
-  it "should respond to close"
-  it "should respond to closed?"
+  let(:c) { Go::Channel.new }
+
+  it "should respond to close" do
+    lambda { c.close }.should_not raise_error
+    c.closed?.should be_true
+  end
+
+  it "should respond to closed?" do
+    c.closed?.should be_false
+    c.close
+    c.closed?.should be_true
+  end
 
   context "direction" do
     # A channel provides a mechanism for two concurrently executing functions to
