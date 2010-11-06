@@ -5,7 +5,7 @@ describe Go::Channel do
   # http://golang.org/doc/go_spec.html#Channel_types
 
   include Go
-  let(:c) { Channel.new }
+  let(:c) { Channel.new(:type => String) }
 
   it "should respond to close" do
     lambda { c.close }.should_not raise_error
@@ -24,22 +24,22 @@ describe Go::Channel do
     # type. The value of an uninitialized channel is nil.
 
     it "should support send only" do
-      c = Channel.new(:direction => :send)
+      c = Channel.new(:direction => :send, :type => String)
 
       lambda { c << "hello"   }.should_not raise_error
       lambda { c.push "hello" }.should_not raise_error
       lambda { c.send "hello" }.should_not raise_error
 
-      lambda { c.pop }.should raise_error(Channel::InvalidDirection)
-      lambda { c.receive }.should raise_error(Channel::InvalidDirection)
+      lambda { c.pop }.should raise_error Channel::InvalidDirection
+      lambda { c.receive }.should raise_error Channel::InvalidDirection
     end
 
     it "should support receive only" do
-        c = Channel.new(:direction => :receive)
+        c = Channel.new(:direction => :receive, :type => String)
 
-        lambda { c << "hello"   }.should raise_error(Channel::InvalidDirection)
-        lambda { c.push "hello" }.should raise_error(Channel::InvalidDirection)
-        lambda { c.send "hello" }.should raise_error(Channel::InvalidDirection)
+        lambda { c << "hello"   }.should raise_error Channel::InvalidDirection
+        lambda { c.push "hello" }.should raise_error Channel::InvalidDirection
+        lambda { c.send "hello" }.should raise_error Channel::InvalidDirection
 
         lambda { c.pop }.should_not raise_error
         lambda { c.receive }.should_not raise_error
@@ -62,9 +62,15 @@ describe Go::Channel do
   end
 
   context "typed" do
-    # Maybe?
-    it "should create a typed channel"
-    it "should reject messages of invalid type"
+    it "should create a typed channel" do
+      lambda { Channel.new }.should raise_error Channel::Untyped
+      lambda { Channel.new(:type => Integer) }.should_not raise_error
+    end
+
+    it "should reject messages of invalid type" do
+      lambda { c.send 1 }.should raise_error(Channel::InvalidType)
+      lambda { c.send "hello" }.should_not raise_error
+    end
   end
 
   context "channels of channels" do
