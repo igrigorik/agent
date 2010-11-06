@@ -4,7 +4,8 @@ require 'lib/go'
 describe Go::Channel do
   # http://golang.org/doc/go_spec.html#Channel_types
 
-  let(:c) { Go::Channel.new }
+  include Go
+  let(:c) { Channel.new }
 
   it "should respond to close" do
     lambda { c.close }.should_not raise_error
@@ -22,9 +23,32 @@ describe Go::Channel do
     # synchronize execution and communicate by passing a value of a specified element
     # type. The value of an uninitialized channel is nil.
 
-    it "should support send only"
-    it "should support recieve only"
-    it "should support bi-directional communication"
+    it "should support send only" do
+      c = Channel.new(:direction => :send)
+
+      lambda { c << "hello"   }.should_not raise_error
+      lambda { c.push "hello" }.should_not raise_error
+      lambda { c.send "hello" }.should_not raise_error
+
+      lambda { c.pop }.should raise_error(Channel::InvalidDirection)
+      lambda { c.receive }.should raise_error(Channel::InvalidDirection)
+    end
+
+    it "should support receive only" do
+        c = Channel.new(:direction => :receive)
+
+        lambda { c << "hello"   }.should raise_error(Channel::InvalidDirection)
+        lambda { c.push "hello" }.should raise_error(Channel::InvalidDirection)
+        lambda { c.send "hello" }.should raise_error(Channel::InvalidDirection)
+
+        lambda { c.pop }.should_not raise_error
+        lambda { c.receive }.should_not raise_error
+    end
+
+    it "should default to bi-directional communication" do
+      lambda { c.send "hello" }.should_not raise_error
+      lambda { c.receive }.should_not raise_error
+    end
   end
 
   context "capacity" do
