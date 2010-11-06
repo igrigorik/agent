@@ -1,7 +1,4 @@
-require 'rspec'
-require 'yaml'
-
-require 'lib/go'
+require 'helper'
 
 describe Go::Channel do
   # http://golang.org/doc/go_spec.html#Channel_types

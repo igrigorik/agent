@@ -7,7 +7,7 @@ module Go
     def initialize(opts = {})
       @state      = :active
       @type       = opts.delete(:type)
-      @direction  = opts.delete(:direction) || :bidirectional
+      @direction  = opts.delete(:direction)   || :bidirectional
 
       raise Untyped if @type.nil?
     end
@@ -24,6 +24,7 @@ module Go
       check_direction(:receive)
 
       # receive...
+      # TODO: msg = Marshall.load(msg)
       # TODO: check_type(msg)
     end
     alias :pop  :receive
