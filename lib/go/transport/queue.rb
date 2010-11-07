@@ -1,5 +1,6 @@
 module Go
   module Transport
+
     class Queue < SizedQueue
 
       @@registry = {}
@@ -11,10 +12,11 @@ module Go
         # check if this name is already registered
         # and if so, initialize to existing queue
         # otherwise, register for future use
-        if que = @@registry[name]
-          @que = que
+        if ok = @@registry[name]
+          @que = ok[:que]
+          @mutex = ok[:mutex]
         else
-          @@registry[name] = @que
+          @@registry[name] = {:que => @que, :mutex => @mutex}
         end
       end
 

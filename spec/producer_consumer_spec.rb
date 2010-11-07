@@ -61,4 +61,23 @@ describe "Producer-Consumer" do
     c.close
     s.close
   end
+
+  it "should work as generator" do
+    producer = Proc.new do |c|
+      i = 0
+      loop { c.pipe << i+= 1 }
+    end
+
+    Generator = Struct.new(:name, :pipe)
+    c = Go::Channel.new(name: :incr, type: Integer)
+    g = Generator.new(:incr, c)
+
+    go(g, &producer)
+
+    c.receive.should == 1
+    c.receive.should == 2
+
+    c.chan.size.should == 0
+    c.receive.should == 3
+  end
 end

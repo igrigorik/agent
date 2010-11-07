@@ -4,7 +4,7 @@
 
 module Go
   class Channel
-    attr_reader :name, :transport
+    attr_reader :name, :transport, :chan
 
     def initialize(opts = {})
       @state      = :active
