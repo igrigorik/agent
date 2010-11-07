@@ -101,8 +101,29 @@ describe Go::Channel do
       # buffer is not full, sends can succeed without blocking. If the capacity is zero
       # or absent, the communication succeeds only when both a sender and receiver are ready.
 
-      it "should default to synchronous communication"
-      it "should support asynchronous communication with buffered capacity"
+      it "should default to synchronous communication" do
+         c = Channel.new(:name => "buffered", :type => String)
+
+         c.send "hello"
+         c.receive.should == "hello"
+         lambda { Timeout::timeout(0.1) { c.receive } }.should raise_error(Timeout::Error)
+
+         c.close
+      end
+
+      it "should support asynchronous communication with buffered capacity" do
+        c = Channel.new(:name => "buffered", :type => String, :size => 2)
+
+        c.send "hello 1"
+        c.send "hello 2"
+        lambda { Timeout::timeout(0.1) { c.send "hello 3" } }.should raise_error(Timeout::Error)
+
+        c.receive.should == "hello 1"
+        c.receive.should == "hello 2"
+        lambda { Timeout::timeout(0.1) { c.receive } }.should raise_error(Timeout::Error)
+
+        c.close
+      end
     end
   end
 
