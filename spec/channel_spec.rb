@@ -1,10 +1,15 @@
-require 'helper'
+require "helper"
 
 describe Go::Channel do
   # http://golang.org/doc/go_spec.html#Channel_types
 
   include Go
-  let(:c) { Channel.new(:type => String) }
+  let(:c) { Channel.new(:name => "spec", :type => String) }
+
+  it "should have a name" do
+    lambda { Channel.new(:type => String) }.should raise_error(Channel::NoName)
+    c.name.should == "spec"
+  end
 
   it "should respond to close" do
     lambda { c.close }.should_not raise_error
@@ -28,7 +33,7 @@ describe Go::Channel do
     # type. The value of an uninitialized channel is nil.
 
     it "should support send only" do
-      c = Channel.new(:direction => :send, :type => String)
+      c = Channel.new(:name => "spec", :direction => :send, :type => String)
 
       lambda { c << "hello"   }.should_not raise_error
       lambda { c.push "hello" }.should_not raise_error
@@ -39,7 +44,7 @@ describe Go::Channel do
     end
 
     it "should support receive only" do
-      c = Channel.new(:direction => :receive, :type => String)
+      c = Channel.new(:name => "spec", :direction => :receive, :type => String)
 
       lambda { c << "hello"   }.should raise_error Channel::InvalidDirection
       lambda { c.push "hello" }.should raise_error Channel::InvalidDirection
@@ -57,8 +62,8 @@ describe Go::Channel do
 
   context "typed" do
     it "should create a typed channel" do
-      lambda { Channel.new }.should raise_error Channel::Untyped
-      lambda { Channel.new(:type => Integer) }.should_not raise_error
+      lambda { Channel.new(:name => "spec") }.should raise_error Channel::Untyped
+      lambda { Channel.new(:name => "spec", :type => Integer) }.should_not raise_error
     end
 
     it "should reject messages of invalid type" do
@@ -68,6 +73,10 @@ describe Go::Channel do
   end
 
   context "transport" do
+    it "should default to memory transport" do
+
+    end
+
     context "channels of channels" do
       # One of the most important properties of Go is that a channel is a first-class
       # value that can be allocated and passed around like any other. A common use of

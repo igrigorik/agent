@@ -4,11 +4,16 @@
 
 module Go
   class Channel
+    attr_reader :name
+
     def initialize(opts = {})
       @state      = :active
-      @type       = opts.delete(:type)
-      @direction  = opts.delete(:direction)   || :bidirectional
+      @name       = opts[:name]
+      @type       = opts[:type]
+      @direction  = opts[:direction] || :bidirectional
+      @transport  = (opts[:transport] || Go::Transport::Queue).new
 
+      raise NoName  if @name.nil?
       raise Untyped if @type.nil?
     end
 
@@ -44,6 +49,7 @@ module Go
     end
 
     class InvalidDirection < Exception; end
+    class NoName < Exception; end
     class Untyped < Exception; end
     class InvalidType < Exception; end
   end
