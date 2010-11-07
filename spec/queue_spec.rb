@@ -4,9 +4,9 @@ describe Go::Transport::Queue do
   include Go::Transport
 
   it "should support synchronous, unbuffered communication" do
-    lambda { Queue.new }.should_not raise_error
+    lambda { Queue.new("spec") }.should_not raise_error
 
-    q = Queue.new
+    q = Queue.new("spec")
     q.max.should == 1
     q.async?.should be_false
 
@@ -18,9 +18,9 @@ describe Go::Transport::Queue do
   end
 
   it "should support asynchronous, buffered communication" do
-    lambda { Queue.new(2) }.should_not raise_error
+    lambda { Queue.new("spec", 2) }.should_not raise_error
 
-    q = Queue.new(2)
+    q = Queue.new("spec", 2)
     q.max.should == 2
     q.async?.should be_true
 
@@ -30,6 +30,23 @@ describe Go::Transport::Queue do
 
     q.receive.should == "hello 1"
     q.receive.should == "hello 2"
+    lambda { q.receive(true) }.should raise_error(ThreadError, "buffer empty")
+  end
+
+  it "should persist data between queue objects" do
+    q = Queue.new("spec")
+    q.send "hello"
+
+    q = Queue.new("spec")
+    q.receive.should == "hello"
+  end
+
+  it "should clear registry on close" do
+    q = Queue.new("spec")
+    q.send "hello"
+    q.close
+
+    q = Queue.new("spec")
     lambda { q.receive(true) }.should raise_error(ThreadError, "buffer empty")
   end
 
