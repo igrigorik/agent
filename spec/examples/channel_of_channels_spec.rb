@@ -1,39 +1,59 @@
 require "helper"
 
 describe "Channel of Channels" do
+
+  Request = Struct.new(:args, :resultChan)
+
   it "should be able to pass channels as first class citizens" do
+    server = Proc.new do |reqs|
+      2.times do |n|
+        res = Request.new(n, Go::Channel.new(:name => "resultChan-#{n}", :type => Integer))
 
-    # each request will provide an argument, and get passed
-    # a reference to the result accumulator
-    Request = Struct.new(:args, :resultChan)
-
-    # resultChan will accumulate answers
-    resultChan = Go::Channel.new(name: :resultChan, type: Integer)
-
-    # channel of user requests
-    clientRequests = Go::Channel.new(name: :clientRequests, type: Request)
+        reqs << res
+        res.resultChan.receive.should == n+1
+      end
+    end
 
     worker = Proc.new do |reqs|
       loop do
         req = reqs.receive
-        req.resultChan << req.args + 1
+        req.resultChan << req.args+1
       end
     end
 
-    # spawn two workers
-    go clientRequests, &worker
-    go clientRequests, &worker
+    clientRequests = Go::Channel.new(:name => :clientRequests, :type => Request)
 
-    r1 = Request.new(10, resultChan)
-    r2 = Request.new(20, resultChan)
+    s = go(clientRequests, &server)
+    c = go(clientRequests, &worker)
 
-    clientRequests << r1
-    clientRequests << r2
+    s.join
+    clientRequests.close
+  end
 
-    # TODO: Blargh.. thread scheduling. Something funky is going on
-    # here when requesting two results...
-    r1.resultChan.receive.should == 11
-    # resultChan.receive.to_s
+  it "should work with multiple workers" do
+    worker = Proc.new do |reqs|
+      loop do
+        req = reqs.receive
+        req.resultChan << req.args+1
+      end
+    end
 
+    clientRequests = Go::Channel.new(:name => :clientRequests, :type => Request)
+
+    # start multiple workers
+    go(clientRequests, &worker)
+    go(clientRequests, &worker)
+
+    # start server
+    s = go clientRequests do |reqs|
+      2.times do |n|
+        res = Request.new(n, Go::Channel.new(:name => "resultChan-#{n}", :type => Integer))
+
+        reqs << res
+        res.resultChan.receive.should == n+1
+      end
+    end
+
+    s.join
   end
 end

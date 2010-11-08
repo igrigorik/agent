@@ -41,13 +41,13 @@ describe Go::Transport::Queue do
     q.receive.should == "hello"
   end
 
-  it "should clear registry on close" do
-    q = Queue.new("spec")
-    q.send "hello"
-    q.close
+   it "should clear registry on close" do
+     q = Queue.new("spec")
+     q.send "hello"
+     q.close
 
-    q = Queue.new("spec")
-    lambda { q.receive(true) }.should raise_error(ThreadError, "buffer empty")
-  end
+     q = Queue.new("spec")
+     lambda { q.receive(true) }.should raise_error(ThreadError, "buffer empty")
+   end
 
 end

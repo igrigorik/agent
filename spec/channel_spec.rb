@@ -22,6 +22,21 @@ describe Go::Channel do
     c.closed?.should be_true
   end
 
+  context "deadlock" do
+    it "should deadlock on single thread" do
+      c = Channel.new(:name => "deadlock", :type => String)
+      lambda { c.receive }.should raise_error
+      c.close
+    end
+
+    it "should not deadlock with multiple threads" do
+      c = Channel.new(:name => "deadlock", :type => String)
+      Thread.new { sleep(0.1); c.push "hi" }
+      lambda { c.receive }.should_not raise_error
+      c.close
+    end
+  end
+
   context "direction" do
     # A channel provides a mechanism for two concurrently executing functions to
     # synchronize execution and communicate by passing a value of a specified element
@@ -102,13 +117,13 @@ describe Go::Channel do
       # or absent, the communication succeeds only when both a sender and receiver are ready.
 
       it "should default to synchronous communication" do
-         c = Channel.new(:name => "buffered", :type => String)
+        c = Channel.new(:name => "buffered", :type => String)
 
-         c.send "hello"
-         c.receive.should == "hello"
-         lambda { Timeout::timeout(0.1) { c.receive } }.should raise_error(Timeout::Error)
+        c.send "hello"
+        c.receive.should == "hello"
+        lambda { Timeout::timeout(0.1) { c.receive } }.should raise_error(Timeout::Error)
 
-         c.close
+        c.close
       end
 
       it "should support asynchronous communication with buffered capacity" do

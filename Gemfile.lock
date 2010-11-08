@@ -19,6 +19,7 @@ GEM
       rspec-expectations (~> 2.0.1)
 
 PLATFORMS
+  java
   ruby
 
 DEPENDENCIES
