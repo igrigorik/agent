@@ -2,7 +2,7 @@
 # that two calculations (goroutines) are in a known state.
 # - http://golang.org/doc/effective_go.html#channels
 
-module Go
+module Agent
   class Channel
     attr_reader :name, :transport, :chan
 
@@ -12,7 +12,7 @@ module Go
       @max        = opts[:size] || 1
       @type       = opts[:type]
       @direction  = opts[:direction] || :bidirectional
-      @transport  = opts[:transport] || Go::Transport::Queue
+      @transport  = opts[:transport] || Agent::Transport::Queue
 
       raise NoName  if @name.nil?
       raise Untyped if @type.nil?

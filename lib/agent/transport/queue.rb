@@ -1,4 +1,4 @@
-module Go
+module Agent
   module Transport
 
     class Queue

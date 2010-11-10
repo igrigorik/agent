@@ -7,7 +7,7 @@ describe "Channel of Channels" do
   it "should be able to pass channels as first class citizens" do
     server = Proc.new do |reqs|
       2.times do |n|
-        res = Request.new(n, Go::Channel.new(:name => "resultChan-#{n}", :type => Integer))
+        res = Request.new(n, Agent::Channel.new(:name => "resultChan-#{n}", :type => Integer))
 
         reqs << res
         res.resultChan.receive.should == n+1
@@ -21,7 +21,7 @@ describe "Channel of Channels" do
       end
     end
 
-    clientRequests = Go::Channel.new(:name => :clientRequests, :type => Request)
+    clientRequests = Agent::Channel.new(:name => :clientRequests, :type => Request)
 
     s = go(clientRequests, &server)
     c = go(clientRequests, &worker)
@@ -38,7 +38,7 @@ describe "Channel of Channels" do
       end
     end
 
-    clientRequests = Go::Channel.new(:name => :clientRequests, :type => Request)
+    clientRequests = Agent::Channel.new(:name => :clientRequests, :type => Request)
 
     # start multiple workers
     go(clientRequests, &worker)
@@ -47,7 +47,7 @@ describe "Channel of Channels" do
     # start server
     s = go clientRequests do |reqs|
       2.times do |n|
-        res = Request.new(n, Go::Channel.new(:name => "resultChan-#{n}", :type => Integer))
+        res = Request.new(n, Agent::Channel.new(:name => "resultChan-#{n}", :type => Integer))
 
         reqs << res
         res.resultChan.receive.should == n+1

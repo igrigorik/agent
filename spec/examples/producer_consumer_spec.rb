@@ -49,8 +49,8 @@ describe "Producer-Consumer" do
       s << "consumer finished"
     end
 
-    c = Go::Channel.new(name: :c, type: Integer)
-    s = Go::Channel.new(name: :s, type: String)
+    c = Agent::Channel.new(name: :c, type: Integer)
+    s = Agent::Channel.new(name: :s, type: String)
 
     go(c, 3, s, &producer)
     go(c, 3, s, &consumer)
@@ -69,7 +69,7 @@ describe "Producer-Consumer" do
     end
 
     Generator = Struct.new(:name, :pipe)
-    c = Go::Channel.new(name: :incr, type: Integer)
+    c = Agent::Channel.new(name: :incr, type: Integer)
     g = Generator.new(:incr, c)
 
     go(g, &producer)

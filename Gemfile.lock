@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    go (0.0.1)
+    agent (0.0.1)
 
 GEM
   remote: http://rubygems.org/
@@ -23,5 +23,5 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  go!
+  agent!
   rspec

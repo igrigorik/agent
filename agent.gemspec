@@ -1,18 +1,18 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "go/version"
+require "agent/version"
 
 Gem::Specification.new do |s|
-  s.name        = "go"
-  s.version     = Go::VERSION
+  s.name        = "agent"
+  s.version     = Agent::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = ["TODO: Write your name"]
-  s.email       = ["TODO: Write your email address"]
-  s.homepage    = "http://rubygems.org/gems/go"
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.authors     = ["Ilya Grigorik"]
+  s.email       = ["ilya@igvita.com"]
+  s.homepage    = "http://rubygems.org/gems/agent"
+  s.summary     = %q{Agent is a diverse family of related approaches to formally modelling concurrent systems, in Ruby}
+  s.description = s.summary
 
-  s.rubyforge_project = "go"
+  s.rubyforge_project = "agent"
   s.add_development_dependency "rspec"
 
   s.files         = `git ls-files`.split("\n")

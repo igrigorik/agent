@@ -1,7 +1,7 @@
 require 'helper'
 
-describe Go::Transport::Queue do
-  include Go::Transport
+describe Agent::Transport::Queue do
+  include Agent::Transport
 
   it "should support synchronous, unbuffered communication" do
     lambda { Queue.new("spec") }.should_not raise_error

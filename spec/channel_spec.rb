@@ -1,9 +1,9 @@
 require "helper"
 
-describe Go::Channel do
+describe Agent::Channel do
   # http://golang.org/doc/go_spec.html#Channel_types
 
-  include Go
+  include Agent
   let(:c) { Channel.new(:name => "spec", :type => String) }
 
   it "should have a name" do
@@ -88,7 +88,7 @@ describe Go::Channel do
 
   context "transport" do
     it "should default to memory transport" do
-      c.transport.should == Go::Transport::Queue
+      c.transport.should == Agent::Transport::Queue
     end
 
     context "channels of channels" do

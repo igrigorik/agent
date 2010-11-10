@@ -1,5 +1,5 @@
-require 'go/channel'
-require 'go/transport/queue'
+require 'agent/channel'
+require 'agent/transport/queue'
 
 module Kernel
   def go(*args, &blk)
