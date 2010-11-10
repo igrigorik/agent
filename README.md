@@ -1,6 +1,6 @@
 # Agent
 
-Agent is a diverse family of related approaches to formally modelling concurrent systems, in Ruby. In other words, it is a collection of different [process calculi](http://en.wikipedia.org/wiki/Process_calculus) primitives and patterns, with no specific, idiomatic affiliation to any specific implementation. A few available patterns so far:
+Agent is a diverse family of related approaches for modelling concurrent systems, in Ruby. In other words, it is a collection of different [process calculi](http://en.wikipedia.org/wiki/Process_calculus) primitives and patterns, with no specific, idiomatic affiliation to any specific implementation. A few available patterns so far:
 
  - Goroutines on top of green Ruby threads
  - Named, in-memory channels
@@ -22,7 +22,7 @@ This gem is a work in progress & an experiment, so treat it as such. At the mome
       loop { c.pipe << i+= 1 }
     end
 
-    c = Go::Channel.new(name: :incr, type: Integer)
+    c = Agent::Channel.new(name: :incr, type: Integer)
 
     Generator = Struct.new(:name, :pipe)
     g = Generator.new(:incr, c)

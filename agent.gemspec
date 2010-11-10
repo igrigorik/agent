@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.authors     = ["Ilya Grigorik"]
   s.email       = ["ilya@igvita.com"]
   s.homepage    = "http://rubygems.org/gems/agent"
-  s.summary     = %q{Agent is a diverse family of related approaches to formally modelling concurrent systems, in Ruby}
+  s.summary     = %q{Agent is a diverse family of related approaches for modelling concurrent systems, in Ruby}
   s.description = s.summary
 
   s.rubyforge_project = "agent"
