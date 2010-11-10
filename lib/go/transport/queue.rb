@@ -15,7 +15,8 @@ module Go
           @@registry[@name] = {
             :que => [],
             :wait => [],
-            :mutex => Mutex.new
+            :mutex => Mutex.new,
+            :cvar => ConditionVariable.new
           }
         end
       end
@@ -24,6 +25,7 @@ module Go
       def que;          data[:que]; end
       def wait;  data[:wait]; end
       def mutex; data[:mutex]; end
+      def cvar;  data[:cvar]; end
 
       def max; @max; end
       def size; que.size; end
@@ -33,18 +35,11 @@ module Go
         mutex.synchronize {
           while true
             break if que.length < @max
-            wait.push Thread.current
-            mutex.sleep
+            cvar.wait(mutex)
           end
 
           que.push obj
-
-          begin
-            t = wait.shift
-            t.wakeup if t
-          rescue ThreadError
-            retry
-          end
+          cvar.signal
         }
       end
       alias << push
@@ -54,18 +49,11 @@ module Go
         mutex.synchronize {
           while true
             break if !que.empty?
-            wait.push Thread.current
-            mutex.sleep
+            cvar.wait(mutex)
           end
 
           retval = que.shift
-
-          begin
-            t = wait.shift
-            t.wakeup if t
-          rescue ThreadError
-            retry
-          end
+          cvar.signal
 
           retval
         }
