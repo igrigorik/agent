@@ -7,20 +7,11 @@ Agent is a diverse family of related approaches to formally modelling concurrent
 
 This gem is a work in progress & an experiment, so treat it as such. At the moment, it is heavily influenced by Google's Go and π-calculus primitives.
 
-# Go & π-calculus: Background & Motivation
+# Working Code Examples
 
-*Do not communicate by sharing memory; instead, share memory by communicating.*
-
-Concurrent programming in many environments is made difficult by the subtleties required to implement correct access to shared variables. Google's Go encourages a different approach in which shared values are passed around on channels and, in fact, never actively shared by separate threads of execution. Only one goroutine has access to the value at any given time. Data races cannot occur, by design.
-
-One way to think about this model is to consider a typical single-threaded program running on one CPU. It has no need for synchronization primitives. Now run another such instance; it too needs no synchronization. Now let those two communicate; if the communication is the synchronizer, there's still no need for other synchronization. Unix pipelines, for example, fit this model perfectly. Although Go's approach to concurrency originates in Hoare's Communicating Sequential Processes (CSP), it can also be seen as a type-safe generalization of Unix pipes.
-
-To learn more about Go see following resources:
-
- * [golang.org](http://golang.org/)
- * [Go's concurrency](http://golang.org/doc/effective_go.html#concurrency)
- * [Go's channels](http://golang.org/doc/effective_go.html#channels)
-
+ * [Producer, Consumer with Goroutines](https://github.com/igrigorik/agent/blob/master/spec/examples/producer_consumer_spec.rb)
+ * [Serializable Channels / Event-driven server](https://github.com/igrigorik/agent/blob/master/spec/examples/channel_of_channels_spec.rb)
+ * [Sieve of Eratosthenes](https://github.com/igrigorik/agent/blob/master/spec/examples/sieve_spec.rb)
 
 # Example: Goroutine Generator
 
@@ -40,6 +31,21 @@ To learn more about Go see following resources:
 
     c.receive
     c.receive
+
+
+# Go & π-calculus: Background & Motivation
+
+*Do not communicate by sharing memory; instead, share memory by communicating.*
+
+Concurrent programming in many environments is made difficult by the subtleties required to implement correct access to shared variables. Google's Go encourages a different approach in which shared values are passed around on channels and, in fact, never actively shared by separate threads of execution. Only one goroutine has access to the value at any given time. Data races cannot occur, by design.
+
+One way to think about this model is to consider a typical single-threaded program running on one CPU. It has no need for synchronization primitives. Now run another such instance; it too needs no synchronization. Now let those two communicate; if the communication is the synchronizer, there's still no need for other synchronization. Unix pipelines, for example, fit this model perfectly. Although Go's approach to concurrency originates in Hoare's Communicating Sequential Processes (CSP), it can also be seen as a type-safe generalization of Unix pipes.
+
+To learn more about Go see following resources:
+
+ * [golang.org](http://golang.org/)
+ * [Go's concurrency](http://golang.org/doc/effective_go.html#concurrency)
+ * [Go's channels](http://golang.org/doc/effective_go.html#channels)
 
 # License
 
