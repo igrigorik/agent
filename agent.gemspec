@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Ilya Grigorik"]
   s.email       = ["ilya@igvita.com"]
-  s.homepage    = "http://rubygems.org/gems/agent"
+  s.homepage    = "https://github.com/igrigorik/agent"
   s.summary     = %q{Agent is a diverse family of related approaches for modelling concurrent systems, in Ruby}
   s.description = s.summary
 
