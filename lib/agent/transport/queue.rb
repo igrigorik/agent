@@ -6,7 +6,7 @@ module Agent
       @@registry = {}
 
       def initialize(name, max = 1)
-        raise ArgumentError, "queue size must be positive" unless max > 0
+        raise ArgumentError, "queue size must be at least 1" unless max > 0
 
         @name = name
         @max = max
@@ -21,8 +21,8 @@ module Agent
         end
       end
 
-      def data;         @@registry[@name];  end
-      def que;          data[:que]; end
+      def data;  @@registry[@name]; end
+      def que;   data[:que]; end
       def wait;  data[:wait]; end
       def mutex; data[:mutex]; end
       def cvar;  data[:cvar]; end
