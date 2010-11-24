@@ -1,9 +1,15 @@
 module Agent
   module Transport
 
+    class ConcurrentHash < Hash
+      def initialize; super; @mutex = Mutex.new; end
+      def [](*args);  @mutex.synchronize { super }; end
+      def []=(*args); @mutex.synchronize { super }; end
+    end
+
     class Queue
 
-      @@registry = {}
+      @@registry = ConcurrentHash.new
 
       def initialize(name, max = 1)
         raise ArgumentError, "queue size must be at least 1" unless max > 0
@@ -22,13 +28,13 @@ module Agent
       end
 
       def data;  @@registry[@name]; end
-      def que;   data[:que]; end
-      def wait;  data[:wait]; end
-      def mutex; data[:mutex]; end
-      def cvar;  data[:cvar]; end
+      def que;   data[:que];        end
+      def wait;  data[:wait];       end
+      def mutex; data[:mutex];      end
+      def cvar;  data[:cvar];       end
 
-      def max; @max; end
-      def size; que.size; end
+      def max;    @max;     end
+      def size;   que.size; end
       def length; que.size; end
 
       def push(obj)
