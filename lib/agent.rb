@@ -1,3 +1,5 @@
+require 'thread'
+
 require 'agent/channel'
 require 'agent/transport/queue'
 
