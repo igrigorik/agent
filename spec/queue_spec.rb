@@ -1,12 +1,13 @@
 require 'helper'
+include Agent::Transport
 
 describe Agent::Transport::Queue do
   include Agent::Transport
 
   it "should support synchronous, unbuffered communication" do
-    lambda { Queue.new("spec") }.should_not raise_error
+    lambda { Agent::Transport::Queue.new("spec") }.should_not raise_error
 
-    q = Queue.new("spec")
+    q = Agent::Transport::Queue.new("spec")
     q.max.should == 1
     q.async?.should be_false
 
@@ -18,9 +19,9 @@ describe Agent::Transport::Queue do
   end
 
   it "should support asynchronous, buffered communication" do
-    lambda { Queue.new("spec", 2) }.should_not raise_error
+    lambda { Agent::Transport::Queue.new("spec", 2) }.should_not raise_error
 
-    q = Queue.new("spec", 2)
+    q = Agent::Transport::Queue.new("spec", 2)
     q.max.should == 2
     q.async?.should be_true
 
@@ -34,19 +35,19 @@ describe Agent::Transport::Queue do
   end
 
   it "should persist data between queue objects" do
-    q = Queue.new("spec")
+    q = Agent::Transport::Queue.new("spec")
     q.send "hello"
 
-    q = Queue.new("spec")
+    q = Agent::Transport::Queue.new("spec")
     q.receive.should == "hello"
   end
 
    it "should clear registry on close" do
-     q = Queue.new("spec")
+     q = Agent::Transport::Queue.new("spec")
      q.send "hello"
      q.close
 
-     q = Queue.new("spec")
+     q = Agent::Transport::Queue.new("spec")
      lambda { q.receive(true) }.should raise_error(ThreadError, "buffer empty")
    end
 

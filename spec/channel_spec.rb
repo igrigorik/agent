@@ -1,13 +1,13 @@
 require "helper"
 
 describe Agent::Channel do
-  # http://golang.org/doc/go_spec.html#Channel_types
+  # http://golang.org/doc/go_spec.html#Agent::Channel_types
 
   include Agent
-  let(:c) { Channel.new(:name => "spec", :type => String) }
+  let(:c) { Agent::Channel.new(:name => "spec", :type => String) }
 
   it "should have a name" do
-    lambda { Channel.new(:type => String) }.should raise_error(Channel::NoName)
+    lambda { Agent::Channel.new(:type => String) }.should raise_error(Agent::Channel::NoName)
     c.name.should == "spec"
   end
 
@@ -23,14 +23,14 @@ describe Agent::Channel do
   end
 
   context "deadlock" do
-    it "should deadlock on single thread" do
-      c = Channel.new(:name => "deadlock", :type => String)
+    it "should deadlock on single thread", :vm => :ruby do
+      c = Agent::Channel.new(:name => "deadlock", :type => String)
       lambda { c.receive }.should raise_error
       c.close
     end
 
     it "should not deadlock with multiple threads" do
-      c = Channel.new(:name => "deadlock", :type => String)
+      c = Agent::Channel.new(:name => "deadlock", :type => String)
       Thread.new { sleep(0.1); c.push "hi" }
       lambda { c.receive }.should_not raise_error
       c.close
@@ -43,24 +43,24 @@ describe Agent::Channel do
     # type. The value of an uninitialized channel is nil.
 
     it "should support send only" do
-      c = Channel.new(:name => "spec", :direction => :send, :type => String, :size => 3)
+      c = Agent::Channel.new(:name => "spec", :direction => :send, :type => String, :size => 3)
 
       lambda { c << "hello"   }.should_not raise_error
       lambda { c.push "hello" }.should_not raise_error
       lambda { c.send "hello" }.should_not raise_error
 
-      lambda { c.pop }.should raise_error Channel::InvalidDirection
-      lambda { c.receive }.should raise_error Channel::InvalidDirection
+      lambda { c.pop }.should raise_error Agent::Channel::InvalidDirection
+      lambda { c.receive }.should raise_error Agent::Channel::InvalidDirection
 
       c.close
     end
 
     it "should support receive only" do
-      c = Channel.new(:name => "spec", :direction => :receive, :type => String)
+      c = Agent::Channel.new(:name => "spec", :direction => :receive, :type => String)
 
-      lambda { c << "hello"   }.should raise_error Channel::InvalidDirection
-      lambda { c.push "hello" }.should raise_error Channel::InvalidDirection
-      lambda { c.send "hello" }.should raise_error Channel::InvalidDirection
+      lambda { c << "hello"   }.should raise_error Agent::Channel::InvalidDirection
+      lambda { c.push "hello" }.should raise_error Agent::Channel::InvalidDirection
+      lambda { c.send "hello" }.should raise_error Agent::Channel::InvalidDirection
 
       # timeout blocking receive calls
       lambda { Timeout::timeout(0.1) { c.pop } }.should raise_error(Timeout::Error)
@@ -75,12 +75,12 @@ describe Agent::Channel do
 
   context "typed" do
     it "should create a typed channel" do
-      lambda { Channel.new(:name => "spec") }.should raise_error Channel::Untyped
-      lambda { Channel.new(:name => "spec", :type => Integer) }.should_not raise_error
+      lambda { Agent::Channel.new(:name => "spec") }.should raise_error Agent::Channel::Untyped
+      lambda { Agent::Channel.new(:name => "spec", :type => Integer) }.should_not raise_error
     end
 
     it "should reject messages of invalid type" do
-      lambda { c.send 1 }.should raise_error(Channel::InvalidType)
+      lambda { c.send 1 }.should raise_error(Agent::Channel::InvalidType)
       lambda { c.send "hello" }.should_not raise_error
       c.receive
     end
@@ -99,7 +99,7 @@ describe Agent::Channel do
 
       it "should be a first class, serializable value" do
         lambda { Marshal.dump(c) }.should_not raise_error
-        lambda { Marshal.load(Marshal.dump(c)).is_a? Channel }.should_not raise_error
+        lambda { Marshal.load(Marshal.dump(c)).is_a? Agent::Channel }.should_not raise_error
       end
 
       it "should be able to pass as a value on a different channel" do
@@ -117,7 +117,7 @@ describe Agent::Channel do
       # or absent, the communication succeeds only when both a sender and receiver are ready.
 
       it "should default to synchronous communication" do
-        c = Channel.new(:name => "buffered", :type => String)
+        c = Agent::Channel.new(:name => "buffered", :type => String)
 
         c.send "hello"
         c.receive.should == "hello"
@@ -127,7 +127,7 @@ describe Agent::Channel do
       end
 
       it "should support asynchronous communication with buffered capacity" do
-        c = Channel.new(:name => "buffered", :type => String, :size => 2)
+        c = Agent::Channel.new(:name => "buffered", :type => String, :size => 2)
 
         c.send "hello 1"
         c.send "hello 2"
