@@ -63,8 +63,7 @@ describe "Producer-Consumer" do
   end
 
   it "should work as generator" do
-    producer = Proc.new do |c|
-      i = 0
+    producer = Proc.new do |c, i=0|
       loop { c.pipe << i+= 1 }
     end
 
@@ -76,8 +75,6 @@ describe "Producer-Consumer" do
 
     c.receive.should == 1
     c.receive.should == 2
-
-    c.chan.size.should == 0
     c.receive.should == 3
   end
 end
