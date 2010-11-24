@@ -100,7 +100,7 @@ describe "sieve of Eratosthenes" do
       out
     end
 
-    sieve = -> do
+    sieve = Proc.new do
       out = Agent::Channel.new(name: 'sieve-block', type: Integer)
 
       go do
