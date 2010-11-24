@@ -1,22 +1,20 @@
 PATH
   remote: .
   specs:
-    agent (0.0.1)
+    agent (0.1.0)
 
 GEM
   remote: http://rubygems.org/
   specs:
     diff-lcs (1.1.2)
-    rspec (2.0.1)
-      rspec-core (~> 2.0.1)
-      rspec-expectations (~> 2.0.1)
-      rspec-mocks (~> 2.0.1)
-    rspec-core (2.0.1)
-    rspec-expectations (2.0.1)
-      diff-lcs (>= 1.1.2)
-    rspec-mocks (2.0.1)
-      rspec-core (~> 2.0.1)
-      rspec-expectations (~> 2.0.1)
+    rspec (2.1.0)
+      rspec-core (~> 2.1.0)
+      rspec-expectations (~> 2.1.0)
+      rspec-mocks (~> 2.1.0)
+    rspec-core (2.1.0)
+    rspec-expectations (2.1.0)
+      diff-lcs (~> 1.1.2)
+    rspec-mocks (2.1.0)
 
 PLATFORMS
   java
@@ -24,4 +22,4 @@ PLATFORMS
 
 DEPENDENCIES
   agent!
-  rspec
+  rspec (~> 2.1.0)
