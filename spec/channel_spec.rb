@@ -140,6 +140,54 @@ describe Agent::Channel do
         c.close
       end
     end
+
+    context "select" do
+      # http://golang.org/doc/go_spec.html#Select_statements
+      # https://github.com/mental/concurrent/blob/master/lib/concurrent/selectable/channel.rb
+      # http://ruby-doc.org/core/classes/IO.html#M002247
+
+      it "should be selectable"
+      it "should select between multiple channels" do
+        pending
+        # select {
+        # case i1 = <-c1:
+        #   print("received ", i1, " from c1\n")
+        # case c2 <- i2:
+        #   print("sent ", i2, " to c2\n")
+        # default:
+        #   print("no communication\n")
+        # }
+      end
+
+      it "should evaluate select statements top to bottom with non-block semantics"
+      it "should scan all cases to identify available actions, then execute random case"
+      it "should evaluate default case immediately if no other cases match"
+      it "shuold wait for any one channel to complete if no default is provided"
+      it "should block forever on empty select block" do
+        pending
+        # select { }  // block forever
+      end
+
+      it "should timeout select" do
+        # http://blog.golang.org/2010/09/go-concurrency-patterns-timing-out-and.html
+        pending
+
+        # timeout := make(chan bool, 1)
+        # go func() {
+        #     time.Sleep(1e9) // one second
+        #     timeout <- true
+        # }()
+        #
+        # select {
+        # case <-ch:
+        #     // a read from ch has occurred
+        # case <-timeout:
+        #     // the read from ch has timed out
+        # }
+
+      end
+
+    end
   end
 
 end
