@@ -45,7 +45,7 @@ module Agent
     alias :<<   :send
 
     def pop?; @chan.pop?; end
-    alias :recieve? :pop?
+    alias :receive? :pop?
 
     def receive
       check_direction(:receive)

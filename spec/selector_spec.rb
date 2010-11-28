@@ -11,7 +11,7 @@ describe Agent::Selector do
   it "should evaluate select statements top to bottom" do
     select do |s|
       s.case(c, :send) {}
-      s.case(c, :recieve) {}
+      s.case(c, :receive) {}
       s.cases.size.should == 2
     end
   end
@@ -36,8 +36,8 @@ describe Agent::Selector do
 
     select do |s|
       s.case(c, :send)    { r.push 1 }
-      s.case(c, :recieve) { r.push 2 }
-      s.case(c, :recieve) { r.push 3 }
+      s.case(c, :receive) { r.push 2 }
+      s.case(c, :receive) { r.push 3 }
     end
 
     r.size.should == 1
@@ -63,12 +63,12 @@ describe Agent::Selector do
       r = []
       select do |s|
         s.case(c, :send) { r.push :send }
-        s.case(c, :recieve) { r.push :recieve }
+        s.case(c, :receive) { r.push :receive }
         s.default { r.push :empty }
       end
 
       r.size.should == 1
-      r.first.should == :recieve
+      r.first.should == :receive
       c.close
     end
 
@@ -78,7 +78,7 @@ describe Agent::Selector do
       r = []
       select do |s|
         s.case(c, :send) { r.push :send }
-        s.case(c, :recieve) { r.push :recieve }
+        s.case(c, :receive) { r.push :receive }
         s.default { r.push :empty }
       end
 
@@ -89,7 +89,22 @@ describe Agent::Selector do
   end
 
   context "select busy channel" do
-    it "should select busy write channel"
+    it "should select busy write channel" do
+      c = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
+      c.send 1
+
+      # brittle.. counting on select to execute within 0.5s
+      start = Time.now.to_i
+      go { sleep(1); c.receive }
+
+      select do |s|
+        s.case(c, :send) { c.send 2 }
+      end
+
+      c.receive.should == 2
+      (Time.now.to_i - s).should be_within(0.1).of(1)
+    end
+
     it "should select busy read channel"
   end
 

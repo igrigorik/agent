@@ -23,6 +23,7 @@ module Agent
       elsif !@default.nil?
         @default.call
       else
+        p [:IO]
         # IO.select
       end
     end
