@@ -37,6 +37,7 @@ module Agent
       def size;   que.size; end
       def length; que.size; end
 
+      def push?; max > size; end
       def push(obj)
         mutex.synchronize {
           while true
@@ -51,6 +52,7 @@ module Agent
       alias << push
       alias enq push
 
+      def pop?; size > 0; end
       def pop(*args)
         mutex.synchronize {
           while true

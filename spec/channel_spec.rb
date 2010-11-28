@@ -142,49 +142,17 @@ describe Agent::Channel do
     end
 
     context "select" do
-      # http://golang.org/doc/go_spec.html#Select_statements
-      # https://github.com/mental/concurrent/blob/master/lib/concurrent/selectable/channel.rb
-      # http://ruby-doc.org/core/classes/IO.html#M002247
+      # A "select" statement chooses which of a set of possible communications will
+      # proceed. It looks similar to a "switch" statement but with the cases all
+      # referring to communication operations.
+      #   - http://golang.org/doc/go_spec.html#Select_statements
 
-      it "should be selectable"
-      it "should select between multiple channels" do
-        pending
-        # select {
-        # case i1 = <-c1:
-        #   print("received ", i1, " from c1\n")
-        # case c2 <- i2:
-        #   print("sent ", i2, " to c2\n")
-        # default:
-        #   print("no communication\n")
-        # }
-      end
+      it "should be selectable" do
+        c = Agent::Channel.new(:name => "selectable", :type => String, :size => 1)
 
-      it "should evaluate select statements top to bottom with non-block semantics"
-      it "should scan all cases to identify available actions, then execute random case"
-      it "should evaluate default case immediately if no other cases match"
-      it "shuold wait for any one channel to complete if no default is provided"
-      it "should block forever on empty select block" do
-        pending
-        # select { }  // block forever
-      end
-
-      it "should timeout select" do
-        # http://blog.golang.org/2010/09/go-concurrency-patterns-timing-out-and.html
-        pending
-
-        # timeout := make(chan bool, 1)
-        # go func() {
-        #     time.Sleep(1e9) // one second
-        #     timeout <- true
-        # }()
-        #
-        # select {
-        # case <-ch:
-        #     // a read from ch has occurred
-        # case <-timeout:
-        #     // the read from ch has timed out
-        # }
-
+        lambda do
+           IO.select([c], nil, nil, 0).should be_nil
+         end.should_not raise_error
       end
 
     end

@@ -17,9 +17,11 @@ module Agent
       raise NoName  if @name.nil?
       raise Untyped if @type.nil?
 
+      @read, @write = IO.pipe
       @chan = @transport.new(@name, @max)
     end
 
+    def to_io; @read; end
     def marshal_load(ary)
       @state, @name, @type, @direction, @transport = *ary
       @chan = @transport.new(@name)
@@ -30,6 +32,9 @@ module Agent
       [@state, @name, @type, @direction, @transport]
     end
 
+    def push?; @chan.push?; end
+    alias :send? :push?
+
     def send(msg)
       check_direction(:send)
       check_type(msg)
@@ -38,6 +43,9 @@ module Agent
     end
     alias :push :send
     alias :<<   :send
+
+    def pop?; @chan.pop?; end
+    alias :recieve? :pop?
 
     def receive
       check_direction(:receive)
@@ -51,7 +59,7 @@ module Agent
 
     def closed?; @state == :closed; end
     def close
-      @chan.close
+      [@chan, @read, @write].map {|c| c.close}
       @state = :closed
     end
 
