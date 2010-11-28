@@ -148,11 +148,18 @@ describe Agent::Channel do
       #   - http://golang.org/doc/go_spec.html#Select_statements
 
       it "should be selectable" do
-        c = Agent::Channel.new(:name => "selectable", :type => String, :size => 1)
+        c = Agent::Channel.new(:name => "selectable", :type => Integer, :size => 1)
+        c.push 1
 
         lambda do
-           IO.select([c], nil, nil, 0).should be_nil
-         end.should_not raise_error
+          r,w,e = IO.select([c], nil, nil, 0)
+          r.should_not be_empty
+
+          # XXX: w.should_not be_empty
+
+        end.should_not raise_error
+
+        c.close
       end
 
     end

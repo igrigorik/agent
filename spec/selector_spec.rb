@@ -89,13 +89,44 @@ describe Agent::Selector do
   end
 
   context "select busy channel" do
+    it "should select busy read channel" do
+      c = Agent::Channel.new(:name => "select-read", :type => Integer, :size => 1)
+      r = []
+
+      # brittle.. counting on select to execute within 0.5s
+      s = Time.now.to_i
+      go(c) { |r| sleep(1); r.send 1 }
+
+      select do |s|
+        s.case(c, :receive) { r.push c.receive }
+      end
+
+      r.size.should == 1
+      (Time.now.to_i - s).should be_within(0.1).of(1)
+      c.close
+    end
+
     it "should select busy write channel" do
+      pending('oi, this is a tricky one...')
+
+      # problem:
+      # for read-only channel, life is simple
+      #  - to_io method on channel and return the read pipe
+      #  - calling select returns channel when there is available data in it
+      #
+      # for read-write, we also need to pass a "writable io" to it
+      #  - can't do to_io on channel anymore, need to split into distinct cases
+      #  - IO.pipe provides a selectable, but no buffer control.. aka, always writable. bah!
+      #   - can't control the pipe buffer size... hardwired into kernel
+      #
+      #   - write own selectable? event loop / listener? blah..
+
       c = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
       c.send 1
 
       # brittle.. counting on select to execute within 0.5s
-      start = Time.now.to_i
-      go { sleep(1); c.receive }
+      s = Time.now.to_i
+      go(c) { |r| sleep(1); p [:go_chan, r.receive] }
 
       select do |s|
         s.case(c, :send) { c.send 2 }
@@ -103,9 +134,8 @@ describe Agent::Selector do
 
       c.receive.should == 2
       (Time.now.to_i - s).should be_within(0.1).of(1)
+      c.close
     end
-
-    it "should select busy read channel"
   end
 
 end

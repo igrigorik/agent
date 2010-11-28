@@ -17,6 +17,8 @@ module Agent
         @name = name
         @max = max
 
+        @rr, @rw = IO.pipe
+
         if !@@registry[@name]
           @@registry[@name] = {
             :que => [],
@@ -33,6 +35,8 @@ module Agent
       def mutex; data[:mutex];      end
       def cvar;  data[:cvar];       end
 
+      def to_io; @rr; end
+
       def max;    @max;     end
       def size;   que.size; end
       def length; que.size; end
@@ -46,6 +50,8 @@ module Agent
           end
 
           que.push obj
+          @rw.write(1)
+
           cvar.signal
         }
       end
@@ -61,6 +67,8 @@ module Agent
           end
 
           retval = que.shift
+          # XXX: @rr.read(1)
+
           cvar.signal
 
           retval

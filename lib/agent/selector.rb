@@ -3,7 +3,8 @@ module Agent
     attr_reader :cases
 
     def initialize
-      @cases = []
+      @cases = {}
+      @r, @w = [], []
       @immediate = nil
       @default = nil
     end
@@ -11,10 +12,18 @@ module Agent
     def default(&blk); @default = blk; end
 
     def case(c, op, &blk)
-      condition = c.__send__("#{op}?")
+      raise "invalid case, must be a channel" if !c.is_a? Agent::Channel
 
+      condition = c.__send__("#{op}?")
+      return unless blk
+
+      case op
+      when :send    then @w.push c
+      when :receive then @r.push c
+      end
+
+      @cases["#{c.name}-#{op}"] = blk
       @immediate ||= blk if condition
-      @cases.push blk if blk
     end
 
     def select
@@ -22,10 +31,21 @@ module Agent
         @immediate.call
       elsif !@default.nil?
         @default.call
+
       else
-        p [:IO]
-        # IO.select
+        r,w,e = IO.select(@r, @w, nil, @cases.size > 0 ? nil : 0)
+
+        op = if r
+          @cases["#{r.first.name}-receive"]
+        elsif w
+          @cases["#{w.first.name}-send"]
+        end
+
+        op.call if op
       end
     end
+
+    private
+
   end
 end

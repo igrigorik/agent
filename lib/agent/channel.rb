@@ -17,11 +17,10 @@ module Agent
       raise NoName  if @name.nil?
       raise Untyped if @type.nil?
 
-      @read, @write = IO.pipe
       @chan = @transport.new(@name, @max)
     end
 
-    def to_io; @read; end
+    def to_io; @chan.to_io; end
     def marshal_load(ary)
       @state, @name, @type, @direction, @transport = *ary
       @chan = @transport.new(@name)
@@ -59,7 +58,7 @@ module Agent
 
     def closed?; @state == :closed; end
     def close
-      [@chan, @read, @write].map {|c| c.close}
+      @chan.close
       @state = :closed
     end
 
