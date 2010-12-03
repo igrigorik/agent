@@ -7,7 +7,17 @@ module Agent
       def []=(*args); @mutex.synchronize { super }; end
     end
 
+    class MemoryQueue
+      attr_accessor :que, :wait, :mutex, :cvar
+      def initialize
+        @que, @wait = [], []
+        @mutex = Mutex.new
+        @cvar = ConditionVariable.new
+      end
+    end
+
     class Queue
+      attr_reader :name, :max
 
       @@registry = ConcurrentHash.new
 
@@ -20,26 +30,19 @@ module Agent
         @rr, @rw = IO.pipe
 
         if !@@registry[@name]
-          @@registry[@name] = {
-            :que => [],
-            :wait => [],
-            :mutex => Mutex.new,
-            :cvar => ConditionVariable.new
-          }
+          @@registry[@name] = MemoryQueue.new
         end
       end
 
-      def data;  @@registry[@name]; end
-      def que;   data[:que];        end
-      def wait;  data[:wait];       end
-      def mutex; data[:mutex];      end
-      def cvar;  data[:cvar];       end
+      %w[que wait mutex cvar].each do |attr|
+        define_method attr do
+          @@registry[@name].send attr
+        end
+      end
 
-      def to_io; @rr; end
-
-      def max;    @max;     end
       def size;   que.size; end
       def length; que.size; end
+      def to_io; @rr; end
 
       def push?; max > size; end
       def push(obj)
