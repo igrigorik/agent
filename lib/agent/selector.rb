@@ -36,7 +36,7 @@ module Agent
         @default.call
       else
 
-        op = nil
+        op, c = nil, nil
         if !@r.empty? || !@w.empty?
 
           s = Agent::Channel.new(name: UUID.generate, :type => Agent::Notification)
@@ -50,12 +50,12 @@ module Agent
             when :receive then @r.map {|c| c.remove_callback(:receive, n.chan.name)}
           end
 
-          op = @cases["#{n.chan.name}-#{n.type}"]
+          op, c = @cases["#{n.chan.name}-#{n.type}"], n.chan
           s.close
 
         end
 
-        op.call if op
+        op.call(c) if op
       end
     end
 

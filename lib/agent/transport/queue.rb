@@ -2,9 +2,10 @@ module Agent
   module Transport
 
     class ConcurrentHash < Hash
-      def initialize; super; @mutex = Mutex.new; end
-      def [](*args);  @mutex.synchronize { super }; end
-      def []=(*args); @mutex.synchronize { super }; end
+      def initialize; super; @m = Mutex.new; end
+      def [](*args);  @m.synchronize { super }; end
+      def []=(*args); @m.synchronize { super }; end
+      def delete(*args); @m.synchronize { super }; end
     end
 
     class MemoryQueue

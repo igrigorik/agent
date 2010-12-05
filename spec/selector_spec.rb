@@ -144,8 +144,8 @@ describe Agent::Selector do
       # wait until one of the channels become available
       # cw should fire first and push '3'
       select do |s|
-        s.case(cr, :receive) { res.push cr.receive }
-        s.case(cw, :send) { cw.send 3 }
+        s.case(cr, :receive) { |c| res.push c.receive }
+        s.case(cw, :send) { |c| c.send 3 }
       end
 
       # 0.8s goroutine should have consumed the message first
@@ -159,6 +159,8 @@ describe Agent::Selector do
       cw.close
       cr.close
     end
+
+    # TODO: r.send 2 on a closed channel - raise error?
   end
 
 end
