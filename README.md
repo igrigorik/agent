@@ -27,15 +27,18 @@ A simple multi-threaded consumer-producer, except without a thread or a mutex in
     p c.receive # => 2
 
 # Example: Multi-channel selector
-A "select" statement chooses which of a set of possible communications will proceed. It looks similar to a "switch" statement but with the cases all referring to communication operations. Select will block until one of the channels becomes available
+A "select" statement chooses which of a set of possible communications will proceed. It looks similar to a "switch" statement but with the cases all referring to communication operations. Select will block until one of the channels becomes available:
 
     cw = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
     cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
 
     select do |s|
       s.case(cr, :receive) { |c| c.receive }
-      s.case(cw, :send)    { |c| c.send 3 }
+      s.case(cw, :send)    { |c| c.send 3  }
+      s.default            { puts :default }
     end
+
+In example above, cr is currently unavailable to read from (since its empty), but cw is ready for writing. Hence, select will immediately choose the cw case and execute that code block. If both channels were unavailable for immediate processing, then the default block would fire. If you omit the default block, and both channels are unavailable then select will wait until one of the channels is ready and execute your code at that time.
 
 # Go & π-calculus: Background & Motivation
 
