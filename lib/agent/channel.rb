@@ -13,6 +13,7 @@ module Agent
       @type       = opts[:type]
       @direction  = opts[:direction] || :bidirectional
       @transport  = opts[:transport] || Agent::Transport::Queue
+      @rcb, @wcb  = [], []
 
       raise NoName  if @name.nil?
       raise Untyped if @type.nil?
@@ -20,15 +21,21 @@ module Agent
       @chan = @transport.new(@name, @max)
     end
 
-    def to_io; @chan.to_io; end
     def marshal_load(ary)
-      @state, @name, @type, @direction, @transport = *ary
+      @state, @name, @type, @direction, @transport, @rcb, @wcb = *ary
       @chan = @transport.new(@name)
       self
     end
 
+    def register_callback(type, c)
+      case type
+      when :receive then @rcb << c
+      when :send    then @wcb << c
+      end
+    end
+
     def marshal_dump
-      [@state, @name, @type, @direction, @transport]
+      [@state, @name, @type, @direction, @transport, @rcb, @wcb]
     end
 
     def push?; @chan.push?; end
@@ -39,6 +46,7 @@ module Agent
       check_type(msg)
 
       @chan.send(Marshal.dump(msg))
+      callback(:receive, @rcb.shift)
     end
     alias :push :send
     alias :<<   :send
@@ -51,6 +59,7 @@ module Agent
 
       msg = Marshal.load(@chan.receive)
       check_type(msg)
+      callback(:send, @wcb.shift)
 
       msg
     end
@@ -63,6 +72,10 @@ module Agent
     end
 
     private
+
+      def callback(type, c)
+        c.send Agent::Notification.new(type, self) if c
+      end
 
       def check_type(msg)
         raise InvalidType if !msg.is_a? @type

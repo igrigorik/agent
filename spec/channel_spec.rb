@@ -140,29 +140,6 @@ describe Agent::Channel do
         c.close
       end
     end
-
-    context "select" do
-      # A "select" statement chooses which of a set of possible communications will
-      # proceed. It looks similar to a "switch" statement but with the cases all
-      # referring to communication operations.
-      #   - http://golang.org/doc/go_spec.html#Select_statements
-
-      it "should be selectable" do
-        c = Agent::Channel.new(:name => "selectable", :type => Integer, :size => 1)
-        c.push 1
-
-        lambda do
-          r,w,e = IO.select([c], nil, nil, 0)
-          r.should_not be_empty
-
-          # XXX: w.should_not be_empty
-
-        end.should_not raise_error
-
-        c.close
-      end
-
-    end
   end
 
 end

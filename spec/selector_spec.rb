@@ -1,6 +1,10 @@
 require 'helper'
 
 describe Agent::Selector do
+  # A "select" statement chooses which of a set of possible communications will
+  # proceed. It looks similar to a "switch" statement but with the cases all
+  # referring to communication operations.
+  #   - http://golang.org/doc/go_spec.html#Select_statements
 
   let(:c) { Agent::Channel.new(:name => "selectable", :type => Integer, :size => 1) }
 
@@ -107,26 +111,12 @@ describe Agent::Selector do
     end
 
     it "should select busy write channel" do
-      pending('oi, this is a tricky one...')
-
-      # problem:
-      # for read-only channel, life is simple
-      #  - to_io method on channel and return the read pipe
-      #  - calling select returns channel when there is available data in it
-      #
-      # for read-write, we also need to pass a "writable io" to it
-      #  - can't do to_io on channel anymore, need to split into distinct cases
-      #  - IO.pipe provides a selectable, but no buffer control.. aka, always writable. bah!
-      #   - can't control the pipe buffer size... hardwired into kernel
-      #
-      #   - write own selectable? event loop / listener? blah..
-
       c = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
       c.send 1
 
       # brittle.. counting on select to execute within 0.5s
       s = Time.now.to_i
-      go(c) { |r| sleep(1); p [:go_chan, r.receive] }
+      go(c) { |r| sleep(1); r.receive }
 
       select do |s|
         s.case(c, :send) { c.send 2 }

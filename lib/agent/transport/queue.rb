@@ -27,8 +27,6 @@ module Agent
         @name = name
         @max = max
 
-        @rr, @rw = IO.pipe
-
         if !@@registry[@name]
           @@registry[@name] = MemoryQueue.new
         end
@@ -42,7 +40,6 @@ module Agent
 
       def size;   que.size; end
       def length; que.size; end
-      def to_io; @rr; end
 
       def push?; max > size; end
       def push(obj)
@@ -53,8 +50,6 @@ module Agent
           end
 
           que.push obj
-          @rw.write(1)
-
           cvar.signal
         }
       end
@@ -70,8 +65,6 @@ module Agent
           end
 
           retval = que.shift
-          # XXX: @rr.read(1)
-
           cvar.signal
 
           retval

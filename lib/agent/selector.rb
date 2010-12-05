@@ -1,4 +1,7 @@
 module Agent
+
+  Notification = Struct.new(:type, :chan)
+
   class Selector
     attr_reader :cases
 
@@ -18,8 +21,8 @@ module Agent
       return unless blk
 
       case op
-      when :send    then @w.push c
-      when :receive then @r.push c
+        when :send    then @w.push c
+        when :receive then @r.push c
       end
 
       @cases["#{c.name}-#{op}"] = blk
@@ -31,21 +34,33 @@ module Agent
         @immediate.call
       elsif !@default.nil?
         @default.call
-
       else
-        r,w,e = IO.select(@r, @w, nil, @cases.size > 0 ? nil : 0)
 
-        op = if r
-          @cases["#{r.first.name}-receive"]
-        elsif w
-          @cases["#{w.first.name}-send"]
+        op = nil
+        begin
+          if !@r.empty? || !@w.empty?
+
+            # XXX: naming
+            # XXX: unregister
+            s = Agent::Channel.new(name: 'rand', :type => Agent::Notification)
+            @w.map {|c| c.register_callback(:send, s)}
+            @r.map {|c| c.register_callback(:receive, s)}
+
+            n = s.receive
+            s.close
+
+            op = @cases["#{n.chan.name}-#{n.type}"]
+
+          end
+        rescue Exception => e
+          p e
+          p e.backtrace
         end
 
         op.call if op
+
       end
     end
-
-    private
 
   end
 end
