@@ -1,11 +1,12 @@
 # Agent
 
-Agent is a diverse family of related approaches for modelling concurrent systems, in Ruby. In other words, it is a collection of different [process calculi](http://en.wikipedia.org/wiki/Process_calculus) primitives and patterns, with no specific, idiomatic affiliation to any specific implementation. A few available patterns so far:
+Agent is an attempt at [Go-like (CSP / pi-calculus) concurrency in Ruby](http://www.igvita.com/2010/12/02/concurrency-with-actors-goroutines-ruby/), but with an additional twist. It is a collection of different [process calculi](http://en.wikipedia.org/wiki/Process_calculus) primitives and patterns, with no specific, idiomatic affiliation to any specific implementation. A few available patterns so far:
 
  - Goroutines on top of green Ruby threads
- - Named, in-memory channels
+ - Named, Typed, Bufferd and Unbufferred in-memory "channels"
+ - Selectable "channels"
 
-This gem is a work in progress & an experiment, so treat it as such. At the moment, it is heavily influenced by Google's Go and π-calculus primitives.
+This gem is a work in progress, so treat it as such.
 
 # Working Code Examples
 
@@ -14,28 +15,33 @@ This gem is a work in progress & an experiment, so treat it as such. At the mome
  * [Sieve of Eratosthenes](https://github.com/igrigorik/agent/blob/master/spec/examples/sieve_spec.rb)
 
 # Example: Goroutine Generator
+A simple multi-threaded consumer-producer, except without a thread or a mutex in sight!
 
-    producer = Proc.new do |c|
-      puts "Starting generator: #{c.name}"
+    c = Agent::Channel.new(name: 'incr', type: Integer)
 
-      i = 0
-      loop { c.pipe << i+= 1 }
+    go(c) do |c, i=0|
+      loop { c << i+= 1 }
     end
 
-    c = Agent::Channel.new(name: :incr, type: Integer)
+    p c.receive # => 1
+    p c.receive # => 2
 
-    Generator = Struct.new(:name, :pipe)
-    g = Generator.new(:incr, c)
+# Example: Multi-channel selector
+A "select" statement chooses which of a set of possible communications will proceed. It looks similar to a "switch" statement but with the cases all referring to communication operations. Select will block until one of the channels becomes available
 
-    go(g, &producer)
+    cw = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
+    cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
 
-    c.receive
-    c.receive
-
+    select do |s|
+      s.case(cr, :receive) { |c| c.receive }
+      s.case(cw, :send)    { |c| c.send 3 }
+    end
 
 # Go & π-calculus: Background & Motivation
 
 *Do not communicate by sharing memory; instead, share memory by communicating.*
+
+See [Concurrency with Actors, Goroutines & Ruby](http://www.igvita.com/2010/12/02/concurrency-with-actors-goroutines-ruby/) for motivation and comparison to other concurrency models.
 
 Concurrent programming in many environments is made difficult by the subtleties required to implement correct access to shared variables. Google's Go encourages a different approach in which shared values are passed around on channels and, in fact, never actively shared by separate threads of execution. Only one goroutine has access to the value at any given time. Data races cannot occur, by design.
 
@@ -46,6 +52,7 @@ To learn more about Go see following resources:
  * [golang.org](http://golang.org/)
  * [Go's concurrency](http://golang.org/doc/effective_go.html#concurrency)
  * [Go's channels](http://golang.org/doc/effective_go.html#channels)
+ * [Go's select statement](http://golang.org/doc/go_spec.html#Select_statements)
 
 # License
 
@@ -53,21 +60,8 @@ To learn more about Go see following resources:
 
 Copyright (c) 2010 Ilya Grigorik
 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
