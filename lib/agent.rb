@@ -1,4 +1,5 @@
 require 'thread'
+require 'uuid'
 
 require 'agent/channel'
 require 'agent/selector'

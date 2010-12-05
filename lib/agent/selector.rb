@@ -40,11 +40,10 @@ module Agent
         begin
           if !@r.empty? || !@w.empty?
 
-            # XXX: naming
             # XXX: unregister
-            s = Agent::Channel.new(name: 'rand', :type => Agent::Notification)
-            @w.map {|c| c.register_callback(:send, s)}
-            @r.map {|c| c.register_callback(:receive, s)}
+            s = Agent::Channel.new(name: UUID.generate, :type => Agent::Notification)
+            @w.map {|c| c.register_callback(:send, s) }
+            @r.map {|c| c.register_callback(:receive, s) }
 
             n = s.receive
             s.close
