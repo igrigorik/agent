@@ -98,15 +98,15 @@ describe Agent::Selector do
       r = []
 
       # brittle.. counting on select to execute within 0.5s
-      s = Time.now.to_i
-      go(c) { |r| sleep(1); r.send 1 }
+      s = Time.now.to_f
+      go(c) { |r| sleep(0.2); r.send 1 }
 
       select do |s|
         s.case(c, :receive) { r.push c.receive }
       end
 
       r.size.should == 1
-      (Time.now.to_i - s).should be_within(0.1).of(1)
+      (Time.now.to_f - s).should be_within(0.1).of(0.2)
       c.close
     end
 
@@ -115,16 +115,49 @@ describe Agent::Selector do
       c.send 1
 
       # brittle.. counting on select to execute within 0.5s
-      s = Time.now.to_i
-      go(c) { |r| sleep(1); r.receive }
+      s = Time.now.to_f
+      go(c) { |r| sleep(0.2); r.receive }
 
       select do |s|
         s.case(c, :send) { c.send 2 }
       end
 
       c.receive.should == 2
-      (Time.now.to_i - s).should be_within(0.1).of(1)
+      (Time.now.to_f - s).should be_within(0.1).of(0.2)
       c.close
+    end
+
+    it "should select first available channel" do
+      # create a "full" write channel, and "empty" read channel
+      cw = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
+      cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
+
+      cw.send 1
+      res = []
+
+      # empty read channel will wait for 1s before pushing a message into it
+      # full write channel will wait for 0.8s before consuming the message
+      s = Time.now.to_f
+      go(cr) { |r| sleep(0.5); r.send 2 }
+      go(cw) { |w| sleep(0.2); res.push w.receive }
+
+      # wait until one of the channels become available
+      # cw should fire first and push '3'
+      select do |s|
+        s.case(cr, :receive) { res.push cr.receive }
+        s.case(cw, :send) { cw.send 3 }
+      end
+
+      # 0.8s goroutine should have consumed the message first
+      res.size.should == 1
+      res.first.should == 1
+
+      # send case should have fired, and we should have a message
+      cw.receive.should == 3
+
+      (Time.now.to_f - s).should be_within(0.1).of(0.2)
+      cw.close
+      cr.close
     end
   end
 
