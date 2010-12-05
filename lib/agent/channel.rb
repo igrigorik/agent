@@ -34,6 +34,13 @@ module Agent
       end
     end
 
+    def remove_callback(type, name)
+      case type
+      when :receive then @rcb.delete_if {|c| c.chan.name == name }
+      when :send    then @wcb.delete_if {|c| c.chan.name == name }
+      end
+    end
+
     def marshal_dump
       [@state, @name, @type, @direction, @transport, @rcb, @wcb]
     end

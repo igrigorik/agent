@@ -37,27 +37,25 @@ module Agent
       else
 
         op = nil
-        begin
-          if !@r.empty? || !@w.empty?
+        if !@r.empty? || !@w.empty?
 
-            # XXX: unregister
-            s = Agent::Channel.new(name: UUID.generate, :type => Agent::Notification)
-            @w.map {|c| c.register_callback(:send, s) }
-            @r.map {|c| c.register_callback(:receive, s) }
+          s = Agent::Channel.new(name: UUID.generate, :type => Agent::Notification)
+          @w.map {|c| c.register_callback(:send, s) }
+          @r.map {|c| c.register_callback(:receive, s) }
 
-            n = s.receive
-            s.close
+          n = s.receive
 
-            op = @cases["#{n.chan.name}-#{n.type}"]
-
+          case n.type
+            when :send    then @w.map {|c| c.remove_callback(:send, n.chan.name)}
+            when :receive then @r.map {|c| c.remove_callback(:receive, n.chan.name)}
           end
-        rescue Exception => e
-          p e
-          p e.backtrace
+
+          op = @cases["#{n.chan.name}-#{n.type}"]
+          s.close
+
         end
 
         op.call if op
-
       end
     end
 
