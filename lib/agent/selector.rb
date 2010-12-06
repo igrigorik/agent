@@ -14,6 +14,12 @@ module Agent
 
     def default(&blk); @default = blk; end
 
+    def timeout(t, &blk)
+      s = Agent::Channel.new(name: UUID.generate, :type => TrueClass)
+      go(s) { sleep t; s.send true; s.close }
+      self.case(s, :receive, &blk)
+    end
+
     def case(c, op, &blk)
       raise "invalid case, must be a channel" if !c.is_a? Agent::Channel
 

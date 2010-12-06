@@ -28,10 +28,10 @@ describe Agent::Selector do
   end
 
   it "should return immediately on empty select block" do
-    s = Time.now.to_i
+    s = Time.now.to_f
     select {}
 
-    (Time.now.to_i - s).should be_within(0.05).of(0)
+    (Time.now.to_f - s).should be_within(0.05).of(0)
   end
 
   it "should scan all cases to identify available actions and execute first available one" do
@@ -57,6 +57,16 @@ describe Agent::Selector do
 
     r.size.should == 1
     r.first.should == :default
+  end
+
+  it "should timeout select statement" do
+    r, s = [], Time.now.to_f
+    select do |s|
+      s.timeout(0.1) { r.push :timeout }
+    end
+
+    r.first.should == :timeout
+    (Time.now.to_f - s).should be_within(0.05).of(0.1)
   end
 
   context "select immediately available channel" do
