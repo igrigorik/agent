@@ -15,7 +15,7 @@ This gem is a work in progress, so treat it as such.
  * [Sieve of Eratosthenes](https://github.com/igrigorik/agent/blob/master/spec/examples/sieve_spec.rb)
 
 # Example: Goroutine Generator
-A simple multi-threaded consumer-producer, except without a thread or a mutex in sight!
+A simple multi-threaded consumer-producer, except without a thread or a mutex in sight! Note that by default Agent channels are unbuffered, meaning that the size is implicitly set to 1. Hence, in example below, the producer will generate a single value, and block until we call receive - rinse, repeat.
 
     c = Agent::Channel.new(name: 'incr', type: Integer)
 
@@ -35,10 +35,27 @@ A "select" statement chooses which of a set of possible communications will proc
     select do |s|
       s.case(cr, :receive) { |c| c.receive }
       s.case(cw, :send)    { |c| c.send 3  }
+    end
+
+In example above, cr is currently unavailable to read from (since its empty), but cw is ready for writing. Hence, select will immediately choose the cw case and execute that code block.
+
+    cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
+
+    select do |s|
+      s.case(cr, :receive) { |c| c.receive }
       s.default            { puts :default }
     end
 
-In example above, cr is currently unavailable to read from (since its empty), but cw is ready for writing. Hence, select will immediately choose the cw case and execute that code block. If both channels were unavailable for immediate processing, then the default block would fire. If you omit the default block, and both channels are unavailable then select will wait until one of the channels is ready and execute your code at that time.
+In this example, cr is unavailable for read (since its empty), but we also provide "default" case which is executed immediately if no other cases are matched. In other words, if no blocking.
+
+    cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
+
+    select do |s|
+      s.case(cr, :receive) { |c| c.receive }
+      s.timeout(1.0)       { puts :timeout }
+    end
+
+Once again, cr is empty, hence cannot be read from and since there is no default block, select will block until cr is readable, or until the timeout condition is met - which in the case above is set to 1 second.
 
 # Go & π-calculus: Background & Motivation
 
