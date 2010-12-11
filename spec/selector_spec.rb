@@ -6,7 +6,7 @@ describe Agent::Selector do
   # referring to communication operations.
   #   - http://golang.org/doc/go_spec.html#Select_statements
 
-  let(:c) { Agent::Channel.new(:name => "selectable", :type => Integer, :size => 1) }
+  let(:c) { Agent::Channel.new(:name => :selectable, :type => Integer, :size => 1) }
 
   it "should yield Selector on select call" do
     select {|s| s.should be_kind_of Agent::Selector}
@@ -71,7 +71,7 @@ describe Agent::Selector do
 
   context "select immediately available channel" do
     it "should select read channel" do
-      c = Agent::Channel.new(:name => "select-read", :type => Integer, :size => 1)
+      c = Agent::Channel.new(:name => :select_read, :type => Integer, :size => 1)
       c.send 1
 
       r = []
@@ -87,7 +87,7 @@ describe Agent::Selector do
     end
 
     it "should select write channel" do
-      c = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
+      c = Agent::Channel.new(:name => :select_write, :type => Integer, :size => 1)
 
       r = []
       select do |s|
@@ -104,7 +104,7 @@ describe Agent::Selector do
 
   context "select busy channel" do
     it "should select busy read channel" do
-      c = Agent::Channel.new(:name => "select-read", :type => Integer, :size => 1)
+      c = Agent::Channel.new(:name => :select_read, :type => Integer, :size => 1)
       r = []
 
       # brittle.. counting on select to execute within 0.5s
@@ -121,7 +121,7 @@ describe Agent::Selector do
     end
 
     it "should select busy write channel" do
-      c = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
+      c = Agent::Channel.new(:name => :select_write, :type => Integer, :size => 1)
       c.send 1
 
       # brittle.. counting on select to execute within 0.5s
@@ -139,8 +139,8 @@ describe Agent::Selector do
 
     it "should select first available channel" do
       # create a "full" write channel, and "empty" read channel
-      cw = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
-      cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
+      cw = Agent::Channel.new(:name => :select_write, :type => Integer, :size => 1)
+      cr = Agent::Channel.new(:name => :select_read,  :type => Integer, :size => 1)
 
       cw.send 1
       res = []

@@ -15,7 +15,7 @@ module Agent
     def default(&blk); @default = blk; end
 
     def timeout(t, &blk)
-      s = Agent::Channel.new(name: UUID.generate, :type => TrueClass)
+      s = Agent::Channel.new(name: uuid_channel, :type => TrueClass)
       go(s) { sleep t; s.send true; s.close }
       self.case(s, :receive, &blk)
     end
@@ -45,7 +45,7 @@ module Agent
         op, c = nil, nil
         if !@r.empty? || !@w.empty?
 
-          s = Agent::Channel.new(name: UUID.generate, :type => Agent::Notification)
+          s = Agent::Channel.new(name: uuid_channel, :type => Agent::Notification)
           @w.map {|c| c.register_callback(:send, s) }
           @r.map {|c| c.register_callback(:receive, s) }
 
@@ -63,6 +63,12 @@ module Agent
 
         op.call(c) if op
       end
+    end
+
+    private
+
+    def uuid_channel
+      UUID.generate.gsub('-','_').to_sym
     end
 
   end

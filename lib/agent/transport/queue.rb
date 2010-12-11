@@ -24,7 +24,6 @@ module Agent
       def initialize(name, max = 1)
         raise ArgumentError, "queue size must be at least 1" unless max > 0
 
-        name = name.to_s.gsub(/[^\w]/, '__')
         @name = name
         @max = max
 

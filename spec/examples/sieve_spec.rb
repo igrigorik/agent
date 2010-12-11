@@ -8,7 +8,7 @@ describe "sieve of Eratosthenes" do
 
     # send the sequence 2,3,4, ... to returned channel
     def generate
-      ch = Agent::Channel.new(name: 'generator', type: Integer)
+      ch = Agent::Channel.new(name: :generator, type: Integer)
 
       go do
         i = 1
@@ -20,7 +20,7 @@ describe "sieve of Eratosthenes" do
 
     # filter out input values divisible by *prime*, send rest to returned channel
     def filter(in_channel, prime)
-      out = Agent::Channel.new(name: "filter-#{prime}", type: Integer)
+      out = Agent::Channel.new(name: "filter_#{prime}".to_sym, type: Integer)
 
       go do
         loop do
@@ -33,7 +33,7 @@ describe "sieve of Eratosthenes" do
     end
 
     def sieve
-      out = Agent::Channel.new(name: 'sieve', type: Integer)
+      out = Agent::Channel.new(name: :sieve, type: Integer)
 
       go do
         ch = generate
@@ -76,7 +76,7 @@ describe "sieve of Eratosthenes" do
 
     # send the sequence 2,3,4, ... to returned channel
     generate = Proc.new do
-      ch = Agent::Channel.new(name: 'generator-block', type: Integer)
+      ch = Agent::Channel.new(name: :generator_block, type: Integer)
 
       go do
         i = 1
@@ -88,7 +88,7 @@ describe "sieve of Eratosthenes" do
 
     # filter out input values divisible by *prime*, send rest to returned channel
     filtr = Proc.new do |in_channel, prime|
-      out = Agent::Channel.new(name: "filter-#{prime}-block", type: Integer)
+      out = Agent::Channel.new(name: "filter_#{prime}_block".to_sym, type: Integer)
 
       go do
         loop do
@@ -101,7 +101,7 @@ describe "sieve of Eratosthenes" do
     end
 
     sieve = Proc.new do
-      out = Agent::Channel.new(name: 'sieve-block', type: Integer)
+      out = Agent::Channel.new(name: :sieve_block, type: Integer)
 
       go do
         ch = generate.call

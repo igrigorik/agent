@@ -7,6 +7,9 @@ module Agent
     attr_reader :name, :transport, :chan
 
     def initialize(opts = {})
+      raise InvalidName if !opts[:name].is_a?(Symbol) || opts[:name].nil?
+      raise Untyped if opts[:type].nil?
+
       @state      = :active
       @name       = opts[:name]
       @max        = opts[:size] || 1
@@ -14,9 +17,6 @@ module Agent
       @direction  = opts[:direction] || :bidirectional
       @transport  = opts[:transport] || Agent::Transport::Queue
       @rcb, @wcb  = [], []
-
-      raise NoName  if @name.nil?
-      raise Untyped if @type.nil?
 
       @chan = @transport.new(@name, @max)
     end
@@ -94,7 +94,7 @@ module Agent
       end
 
       class InvalidDirection < Exception; end
-      class NoName < Exception; end
+      class InvalidName < Exception; end
       class Untyped < Exception; end
       class InvalidType < Exception; end
   end
