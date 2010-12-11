@@ -33,12 +33,12 @@ module Agent
 
       %w[que wait mutex cvar].each do |attr|
         define_method attr do
-          Queue.class_variable_get(:"@@__agent_queue_#{@name}__").send attr
+          Queue.send(:class_variable_get, :"@@__agent_queue_#{@name}__").send attr
         end
       end
 
       def close
-        Queue.remove_class_variable(:"@@__agent_queue_#{@name}__")
+        Queue.send(:remove_class_variable, :"@@__agent_queue_#{@name}__")
       end
 
       def size;   que.size; end
