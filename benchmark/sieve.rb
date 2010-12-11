@@ -2,14 +2,14 @@ require 'benchmark'
 require 'lib/agent'
 
 def generate(num)
-  ch = Agent::Channel.new(name: "generator-#{num}", type: Integer)
+  ch = Agent::Channel.new(name: "generator_#{num}".to_sym, type: Integer)
   go { |i=1| loop { ch << i+= 1} }
 
   return ch
 end
 
 def filter(in_channel, prime, num)
-  out = Agent::Channel.new(name: "filter-#{prime}-#{num}", type: Integer)
+  out = Agent::Channel.new(name: "filter_#{prime}_#{num}".to_sym, type: Integer)
 
   go do
     loop do
@@ -22,7 +22,7 @@ def filter(in_channel, prime, num)
 end
 
 def sieve(num)
-  out = Agent::Channel.new(name: "sieve-#{num}", type: Integer)
+  out = Agent::Channel.new(name: "sieve_#{num}".to_sym, type: Integer)
 
   go do
     ch = generate(num)
