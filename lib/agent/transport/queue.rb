@@ -32,7 +32,11 @@ module Agent
 
       %w[que wait mutex cvar].each do |attr|
         define_method attr do
-          Queue.send(:class_variable_get, :"@@__agent_queue_#{@name}__").send attr
+          begin
+            Queue.send(:class_variable_get, :"@@__agent_queue_#{@name}__").send attr
+          rescue NameError
+            retry
+          end
         end
       end
 
