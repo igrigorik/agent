@@ -1,13 +1,6 @@
 module Agent
   module Transport
 
-    class ConcurrentHash < Hash
-      def initialize; super; @m = Mutex.new; end
-      def [](*args);  @m.synchronize { super }; end
-      def []=(*args); @m.synchronize { super }; end
-      def delete(*args); @m.synchronize { super }; end
-    end
-
     class MemoryQueue
       attr_accessor :que, :wait, :mutex, :cvar
       def initialize
@@ -19,24 +12,33 @@ module Agent
 
     class Queue
       attr_reader :name, :max
+      LOCK = Monitor.new
 
-      @@registry = ConcurrentHash.new
+      def self.register(name)
+        eval <<-RUBY
+          return @@__agent_queue_#{name}__ if defined? @@__agent_queue_#{name}__
+          LOCK.synchronize { @@__agent_queue_#{name}__ ||= MemoryQueue.new }
+        RUBY
+      end
 
       def initialize(name, max = 1)
         raise ArgumentError, "queue size must be at least 1" unless max > 0
 
+        name = name.to_s.gsub(/[^\w]/, '__')
         @name = name
         @max = max
 
-        if !@@registry[@name]
-          @@registry[@name] = MemoryQueue.new
-        end
+        Queue.register(name)
       end
 
       %w[que wait mutex cvar].each do |attr|
         define_method attr do
-          @@registry[@name].send attr
+          Queue.class_variable_get(:"@@__agent_queue_#{@name}__").send attr
         end
+      end
+
+      def close
+        Queue.remove_class_variable(:"@@__agent_queue_#{@name}__")
       end
 
       def size;   que.size; end
@@ -84,10 +86,6 @@ module Agent
       def receive(nonblock = false)
         raise ThreadError, "buffer empty" if nonblock && que.empty?
         pop
-      end
-
-      def close
-        @@registry.delete @name
       end
 
     end
