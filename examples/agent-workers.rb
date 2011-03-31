@@ -29,8 +29,8 @@ go(clientRequests, &worker)
 # channel, and pass them to our clientRequests pipe, on which our workers are waiting.
 # Once dispatched, we simply call receive and wait for the results!
 
-req1 = Request.new(1, Agent::Channel.new(:name => "resultChan-1", :type => String))
-req2 = Request.new(2, Agent::Channel.new(:name => "resultChan-2", :type => String))
+req1 = Request.new(1, Agent::Channel.new(:name => :resultChan1, :type => String))
+req2 = Request.new(2, Agent::Channel.new(:name => :resultChan2, :type => String))
 
 clientRequests << req1
 clientRequests << req2
