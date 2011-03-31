@@ -1,5 +1,4 @@
 module Agent
-
   Notification = Struct.new(:type, :chan)
 
   class Selector
@@ -49,15 +48,24 @@ module Agent
           @w.map {|c| c.register_callback(:send, s) }
           @r.map {|c| c.register_callback(:receive, s) }
 
-          n = s.receive
+          begin
+            n = s.receive
 
-          case n.type
-            when :send    then @w.map {|c| c.remove_callback(:send, n.chan.name)}
-            when :receive then @r.map {|c| c.remove_callback(:receive, n.chan.name)}
+            case n.type
+              when :send    then @w.map {|c| c.remove_callback(:send, n.chan.name)}
+              when :receive then @r.map {|c| c.remove_callback(:receive, n.chan.name)}
+            end
+
+            op, c = @cases["#{n.chan.name}-#{n.type}"], n.chan
+          rescue Exception => e
+            if e.message =~ /deadlock/
+              raise Exception.new("Selector deadlock: can't select on channel running in same goroutine")
+            else
+              raise e
+            end
+          ensure
+            s.close
           end
-
-          op, c = @cases["#{n.chan.name}-#{n.type}"], n.chan
-          s.close
 
         end
 
@@ -67,9 +75,9 @@ module Agent
 
     private
 
-    def uuid_channel
-      UUID.generate.gsub('-','_').to_sym
-    end
+      def uuid_channel
+        UUID.generate.gsub('-','_').to_sym
+      end
 
   end
 end
