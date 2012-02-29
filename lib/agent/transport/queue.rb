@@ -2,11 +2,11 @@ module Agent
   module Transport
 
     class MemoryQueue
-      attr_accessor :que, :wait, :monitor, :cvar
+      attr_accessor :que, :monitor, :cvar
       def initialize
-        @que, @wait = [], []
+        @que     = []
         @monitor = Monitor.new
-        @cvar = @monitor.new_cond
+        @cvar    = @monitor.new_cond
       end
     end
 
@@ -30,7 +30,7 @@ module Agent
         Queue.register(name)
       end
 
-      %w[que wait monitor cvar].each do |attr|
+      %w[que monitor cvar].each do |attr|
         define_method attr do
           begin
             Queue.send(:class_variable_get, :"@@__agent_queue_#{@name}__").send attr
