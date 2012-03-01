@@ -2,11 +2,11 @@ module Agent
   module Transport
 
     class MemoryQueue
-      attr_accessor :que, :wait, :mutex, :cvar
+      attr_accessor :que, :monitor, :cvar
       def initialize
-        @que, @wait = [], []
-        @mutex = Mutex.new
-        @cvar = ConditionVariable.new
+        @que     = []
+        @monitor = Monitor.new
+        @cvar    = @monitor.new_cond
       end
     end
 
@@ -30,7 +30,7 @@ module Agent
         Queue.register(name)
       end
 
-      %w[que wait mutex cvar].each do |attr|
+      %w[que monitor cvar].each do |attr|
         define_method attr do
           begin
             Queue.send(:class_variable_get, :"@@__agent_queue_#{@name}__").send attr
@@ -49,12 +49,8 @@ module Agent
 
       def push?; max > size; end
       def push(obj)
-        mutex.synchronize {
-          while true
-            break if que.length < @max
-            cvar.wait(mutex)
-          end
-
+        monitor.synchronize {
+          cvar.wait_while{ que.length >= @max }
           que.push obj
           cvar.signal
         }
@@ -64,11 +60,8 @@ module Agent
 
       def pop?; size > 0; end
       def pop(*args)
-        mutex.synchronize {
-          while true
-            break if !que.empty?
-            cvar.wait(mutex)
-          end
+        monitor.synchronize {
+          cvar.wait_while{ que.empty? }
 
           retval = que.shift
           cvar.signal
@@ -82,13 +75,17 @@ module Agent
       def async?; @max > 1; end
 
       def send(msg, nonblock = false)
-        raise ThreadError, "buffer full" if nonblock && que.length >= @max
-        push(msg)
+        monitor.synchronize {
+          raise ThreadError, "buffer full" if nonblock && que.length >= @max
+          push(msg)
+        }
       end
 
       def receive(nonblock = false)
-        raise ThreadError, "buffer empty" if nonblock && que.empty?
-        pop
+        monitor.synchronize {
+          raise ThreadError, "buffer empty" if nonblock && que.empty?
+          pop
+        }
       end
 
     end
