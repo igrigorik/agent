@@ -51,10 +51,6 @@ module Agent
             n = s.receive
             op, chan = @cases["#{n.chan.name}-#{n.type}"], n.chan
           end
-
-          @ordered_cases.each do |direction, c|
-            c.remove_callback(direction, s.name)
-          end
         rescue Exception => e
           if e.message =~ /deadlock/
             raise Exception.new("Selector deadlock: can't select on channel running in same goroutine")
@@ -62,6 +58,10 @@ module Agent
             raise e
           end
         ensure
+          @ordered_cases.each do |direction, c|
+            c.remove_callback(direction, s.name)
+          end
+
           s.close
         end
 
