@@ -46,6 +46,20 @@ describe Agent::Selector do
 
     r.size.should == 1
     r.first.should == 2
+
+    go(c) do |c|
+      sleep 0.2
+      c.send 1
+    end
+
+    select do |s|
+      s.case(c, :send)    { r.push 1 }
+      s.case(c, :receive) { r.push 2 }
+      s.case(c, :receive) { r.push 3 }
+    end
+
+    r.size.should == 2
+    r.last.should == 2
   end
 
   it "should evaluate default case immediately if no other cases match" do

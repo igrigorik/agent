@@ -10,13 +10,15 @@ module Agent
       raise InvalidName if !opts[:name].is_a?(Symbol) || opts[:name].nil?
       raise Untyped if opts[:type].nil?
 
-      @state      = :active
-      @name       = opts[:name]
-      @max        = opts[:size] || 1
-      @type       = opts[:type]
-      @direction  = opts[:direction] || :bidirectional
-      @transport  = opts[:transport] || Agent::Transport::Queue
-      @rcb, @wcb  = [], []
+      @state        = :active
+      @name         = opts[:name]
+      @max          = opts[:size] || 1
+      @type         = opts[:type]
+      @direction    = opts[:direction] || :bidirectional
+      @transport    = opts[:transport] || Agent::Transport::Queue
+      @rcb, @wcb    = [], []
+      @send_monitor = Monitor.new
+      @recv_monitor = Monitor.new
 
       @chan = @transport.new(@name, @max)
     end
@@ -24,13 +26,29 @@ module Agent
     def marshal_load(ary)
       @state, @name, @type, @direction, @transport, @rcb, @wcb = *ary
       @chan = @transport.new(@name)
+      @send_monitor = Monitor.new
+      @recv_monitor = Monitor.new
       self
     end
 
     def register_callback(type, c)
       case type
-      when :receive then @rcb << c
-      when :send    then @wcb << c
+      when :receive
+        @recv_monitor.synchronize {
+          if pop?
+            callback(type, c)
+          else
+            @rcb << c
+          end
+        }
+      when :send
+        @send_monitor.synchronize {
+          if push?
+            callback(type, c)
+          else
+            @wcb << c
+          end
+        }
       end
     end
 
@@ -48,12 +66,14 @@ module Agent
     def push?; @chan.push?; end
     alias :send? :push?
 
-    def send(msg)
+    def send(msg, nonblock=false)
       check_direction(:send)
       check_type(msg)
 
-      @chan.send(Marshal.dump(msg))
-      callback(:receive, @rcb.shift)
+      @send_monitor.synchronize {
+        @chan.send(Marshal.dump(msg), nonblock)
+        callback(:receive, @rcb.shift)
+      }
     end
     alias :push :send
     alias :<<   :send
@@ -61,14 +81,16 @@ module Agent
     def pop?; @chan.pop?; end
     alias :receive? :pop?
 
-    def receive
+    def receive(nonblock=false)
       check_direction(:receive)
 
-      msg = Marshal.load(@chan.receive)
-      check_type(msg)
-      callback(:send, @wcb.shift)
+      @recv_monitor.synchronize {
+        msg = Marshal.load(@chan.receive(nonblock))
+        check_type(msg)
+        callback(:send, @wcb.shift)
 
-      msg
+        msg
+      }
     end
     alias :pop  :receive
 

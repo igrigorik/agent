@@ -6,7 +6,7 @@ module Agent
 
     def initialize
       @cases = {}
-      @r, @w = [], []
+      @ordered_cases = []
       @immediate = nil
       @default = nil
     end
@@ -21,55 +21,52 @@ module Agent
 
     def case(c, op, &blk)
       raise "invalid case, must be a channel" if !c.is_a? Agent::Channel
-
-      condition = c.__send__("#{op}?")
       return unless blk
 
-      case op
-        when :send    then @w.push c
-        when :receive then @r.push c
-      end
+      case_key = "#{c.name}-#{op}"
 
-      @cases["#{c.name}-#{op}"] = blk
-      @immediate ||= blk if condition
+      # Don't re-add a case for the same op and channel, since the first
+      # always wins
+      unless @cases[case_key]
+        @ordered_cases << [op, c]
+        @cases[case_key] = blk
+      end
     end
 
     def select
-      if @immediate
-        @immediate.call
-      elsif !@default.nil?
-        @default.call
-      else
+      op, chan = nil, nil
+      if !@ordered_cases.empty?
 
-        op, c = nil, nil
-        if !@r.empty? || !@w.empty?
-
-          s = Agent::Channel.new(name: uuid_channel, :type => Agent::Notification)
-          @w.map {|c| c.register_callback(:send, s) }
-          @r.map {|c| c.register_callback(:receive, s) }
-
-          begin
-            n = s.receive
-
-            case n.type
-              when :send    then @w.map {|c| c.remove_callback(:send, n.chan.name)}
-              when :receive then @r.map {|c| c.remove_callback(:receive, n.chan.name)}
-            end
-
-            op, c = @cases["#{n.chan.name}-#{n.type}"], n.chan
-          rescue Exception => e
-            if e.message =~ /deadlock/
-              raise Exception.new("Selector deadlock: can't select on channel running in same goroutine")
-            else
-              raise e
-            end
-          ensure
-            s.close
-          end
-
+        s = Agent::Channel.new(name: uuid_channel, :type => Agent::Notification, :size => @ordered_cases.size)
+        @ordered_cases.each do |op, c|
+          c.register_callback(op, s)
+          # Don't continue to register callbacks if one already fired
+          break if s.receive?
         end
 
-        op.call(c) if op
+        begin
+          if !s.receive? && @default
+            op = @default
+          else
+            n = s.receive
+            op, chan = @cases["#{n.chan.name}-#{n.type}"], n.chan
+          end
+        rescue Exception => e
+          if e.message =~ /deadlock/
+            raise Exception.new("Selector deadlock: can't select on channel running in same goroutine")
+          else
+            raise e
+          end
+        ensure
+          @ordered_cases.each do |direction, c|
+            c.remove_callback(direction, s.name)
+          end
+
+          s.close
+        end
+
+
+        op.call(chan)
       end
     end
 
