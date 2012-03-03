@@ -48,6 +48,7 @@ module Agent
           begin
             # Don't block if we have a default
             n = s.receive(!@default.nil?)
+            op, chan = @cases["#{n.chan.name}-#{n.type}"], n.chan
           rescue ThreadError => e
             # We would only get this error if we had a @default blk
             if e.message =~ /buffer empty/
@@ -57,13 +58,9 @@ module Agent
               raise
             end
           ensure
-            @ordered_cases.each do |op, c|
-              c.remove_callback(op, s.name)
+            @ordered_cases.each do |direction, c|
+              c.remove_callback(direction, s.name)
             end
-          end
-
-          if !op
-            op, chan = @cases["#{n.chan.name}-#{n.type}"], n.chan
           end
         rescue Exception => e
           if e.message =~ /deadlock/
