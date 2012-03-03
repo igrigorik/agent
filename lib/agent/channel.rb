@@ -48,11 +48,11 @@ module Agent
     def push?; @chan.push?; end
     alias :send? :push?
 
-    def send(msg)
+    def send(msg, nonblock = false)
       check_direction(:send)
       check_type(msg)
 
-      @chan.send(Marshal.dump(msg))
+      @chan.send(Marshal.dump(msg), nonblock)
       callback(:receive, @rcb.shift)
     end
     alias :push :send
@@ -61,10 +61,10 @@ module Agent
     def pop?; @chan.pop?; end
     alias :receive? :pop?
 
-    def receive
+    def receive(nonblock = false)
       check_direction(:receive)
 
-      msg = Marshal.load(@chan.receive)
+      msg = Marshal.load(@chan.receive(nonblock))
       check_type(msg)
       callback(:send, @wcb.shift)
 

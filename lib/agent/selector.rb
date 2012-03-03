@@ -76,7 +76,7 @@ module Agent
     private
 
       def uuid_channel
-        UUID.generate.gsub('-','_').to_sym
+        SecureRandom.uuid.gsub('-','_').to_sym
       end
 
   end
