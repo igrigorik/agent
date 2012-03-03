@@ -72,14 +72,8 @@ module Agent
           s.close
         end
 
-      end
 
-      if op
-        if chan
-          op.call(chan)
-        else
-          op.call
-        end
+        op.call(chan)
       end
     end
 
