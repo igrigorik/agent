@@ -144,6 +144,14 @@ describe Agent::Channel do
 
         c.close
       end
+
+      it "should support nonblocking mode" do
+        c = Agent::Channel.new(:name => :nonblocking, :type => String)
+        c.send "hello 1", true
+        lambda { c.send "hello 2", true }.should raise_error(ThreadError)
+        c.receive(true).should == "hello 1"
+        lambda { c.receive(true) }.should raise_error(ThreadError)
+      end
     end
   end
 
