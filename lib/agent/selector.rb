@@ -4,8 +4,6 @@ module Agent
   class Selector
     attr_reader :cases
 
-    Infinity = (1.0/0)
-
     def initialize
       @cases = {}
       @ordered_cases = []
@@ -39,7 +37,7 @@ module Agent
       op, chan = nil, nil
       if !@ordered_cases.empty?
 
-        s = Agent::Channel.new(name: uuid_channel, :type => Agent::Notification, :size => Infinity)
+        s = Agent::Channel.new(name: uuid_channel, :type => Agent::Notification, :size => @ordered_cases.size)
         @ordered_cases.each do |op, c|
           c.register_callback(op, s)
           # Don't continue to register callbacks if one already fired
