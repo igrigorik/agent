@@ -1,6 +1,6 @@
 require 'monitor'
 require 'thread'
-require 'uuid'
+require 'securerandom'
 
 require 'agent/channel'
 require 'agent/selector'

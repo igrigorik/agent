@@ -2,13 +2,12 @@ PATH
   remote: .
   specs:
     agent (0.1.0)
-      uuid
 
 GEM
   remote: http://rubygems.org/
   specs:
     diff-lcs (1.1.2)
-    macaddr (1.0.0)
+    rake (0.9.2.2)
     rspec (2.5.0)
       rspec-core (~> 2.5.0)
       rspec-expectations (~> 2.5.0)
@@ -17,8 +16,6 @@ GEM
     rspec-expectations (2.5.0)
       diff-lcs (~> 1.1.2)
     rspec-mocks (2.5.0)
-    uuid (2.3.1)
-      macaddr (~> 1.0)
 
 PLATFORMS
   java
@@ -26,4 +23,5 @@ PLATFORMS
 
 DEPENDENCIES
   agent!
+  rake
   rspec

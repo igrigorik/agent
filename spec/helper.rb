@@ -2,7 +2,8 @@ require 'timeout'
 require 'rspec'
 require 'yaml'
 
-require 'lib/agent'
+$:.unshift File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
+require 'agent'
 
 RSpec.configure do |c|
   c.filter_run_excluding :vm => lambda { |version|
