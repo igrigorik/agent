@@ -48,7 +48,7 @@ module Agent
     def push?; @chan.push?; end
     alias :send? :push?
 
-    def send(msg)
+    def send(msg, nonblock = false)
       check_direction(:send)
       check_type(msg)
 
