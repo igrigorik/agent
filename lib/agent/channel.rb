@@ -67,10 +67,10 @@ module Agent
     alias :send? :push?
 
     def send(msg, nonblock=false)
-      @send_monitor.synchronize {
-        check_direction(:send)
-        check_type(msg)
+      check_direction(:send)
+      check_type(msg)
 
+      @send_monitor.synchronize {
         @chan.send(Marshal.dump(msg), nonblock)
         callback(:receive, @rcb.shift)
       }
@@ -82,9 +82,9 @@ module Agent
     alias :receive? :pop?
 
     def receive(nonblock=false)
-      @recv_monitor.synchronize {
-        check_direction(:receive)
+      check_direction(:receive)
 
+      @recv_monitor.synchronize {
         msg = Marshal.load(@chan.receive(nonblock))
         check_type(msg)
         callback(:send, @wcb.shift)
