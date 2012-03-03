@@ -50,13 +50,9 @@ module Agent
             n = s.receive(!@default.nil?)
             op, chan = @cases["#{n.chan.name}-#{n.type}"], n.chan
           rescue ThreadError => e
-            # We would only get this error if we had a @default blk
-            if e.message =~ /buffer empty/
-              op = @default
-            else
-              # Not due to non-blocking w/ @default, so just re-raise
-              raise
-            end
+            # We would only get a "buffer empty" error if we had a @default blk
+            raise unless e.message =~ /buffer empty/
+            op = @default
           ensure
             @ordered_cases.each do |direction, c|
               c.remove_callback(direction, s.name)
