@@ -1,4 +1,4 @@
-require "helper"
+require "spec_helper"
 
 describe "sieve of Eratosthenes" do
 

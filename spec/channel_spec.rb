@@ -1,4 +1,4 @@
-require "helper"
+require "spec_helper"
 
 describe Agent::Channel do
   # http://golang.org/doc/go_spec.html#Agent::Channel_types

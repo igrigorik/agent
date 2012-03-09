@@ -1,4 +1,4 @@
-require "helper"
+require "spec_helper"
 
 describe "Producer-Consumer" do
   it "should synchronize by communication" do

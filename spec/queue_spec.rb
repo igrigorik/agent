@@ -1,4 +1,4 @@
-require 'helper'
+require "spec_helper"
 include Agent::Transport
 
 describe Agent::Transport::Queue do

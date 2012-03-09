@@ -1,4 +1,4 @@
-require 'helper'
+require "spec_helper"
 
 describe Agent::Selector do
   # A "select" statement chooses which of a set of possible communications will
