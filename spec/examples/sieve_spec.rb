@@ -24,7 +24,7 @@ describe "sieve of Eratosthenes" do
 
       go! do
         loop do
-          i = in_channel.receive[0]
+          i, _ = in_channel.receive
           out << i if (i % prime) != 0
         end
       end
@@ -38,7 +38,7 @@ describe "sieve of Eratosthenes" do
       go! do
         ch = generate
         loop do
-          prime = ch.receive[0]
+          prime, _ = ch.receive
           out << prime
           ch = filter(ch, prime)
         end
@@ -59,7 +59,7 @@ describe "sieve of Eratosthenes" do
       puts primes.receive[0]
     else
       loop do
-        p = primes.receive[0]
+        p, _ = primes.receive
 
         if p <= n
           result << p
@@ -92,7 +92,7 @@ describe "sieve of Eratosthenes" do
 
       go! do
         loop do
-          i = in_channel.receive[0]
+          i, _ = in_channel.receive
           out << i if (i % prime) != 0
         end
       end
@@ -107,7 +107,7 @@ describe "sieve of Eratosthenes" do
         ch = generate.call
 
         loop do
-          prime = ch.receive[0]
+          prime, _ = ch.receive
           out << prime
           ch = filtr.call(ch, prime)
         end
@@ -128,7 +128,7 @@ describe "sieve of Eratosthenes" do
       puts primes.receive[0]
     else
       loop do
-        p = primes.receive[0]
+        p, _ = primes.receive
 
         if p <= n
           result << p

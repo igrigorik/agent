@@ -16,7 +16,7 @@ describe "Channel of Channels" do
 
     worker = Proc.new do |reqs|
       loop do
-        req = reqs.receive[0]
+        req, _ = reqs.receive
         req.resultChan << req.args+1
       end
     end
@@ -33,7 +33,7 @@ describe "Channel of Channels" do
   it "should work with multiple workers" do
     worker = Proc.new do |reqs|
       loop do
-        req = reqs.receive[0]
+        req, _ = reqs.receive
         req.resultChan << req.args+1
       end
     end
