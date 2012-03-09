@@ -64,7 +64,8 @@ describe "Producer-Consumer" do
   end
 
   it "should work as generator" do
-    producer = Proc.new do |c, i=0|
+    producer = Proc.new do |c|
+      i = 0
       loop { c.pipe << i+= 1 }
     end
 
