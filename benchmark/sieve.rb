@@ -2,16 +2,16 @@ require 'benchmark'
 require 'lib/agent'
 
 def generate(num)
-  ch = Agent::Channel.new(name: "generator_#{num}".to_sym, type: Integer)
-  go { |i=1| loop { ch << i+= 1} }
+  ch = channel!(:type => Integer)
+  go! { |i=1| loop { ch << i+= 1} }
 
   return ch
 end
 
 def filter(in_channel, prime, num)
-  out = Agent::Channel.new(name: "filter_#{prime}_#{num}".to_sym, type: Integer)
+  out = channel!(:type => Integer)
 
-  go do
+  go! do
     loop do
       i = in_channel.receive
       out << i if (i % prime) != 0
@@ -22,9 +22,9 @@ def filter(in_channel, prime, num)
 end
 
 def sieve(num)
-  out = Agent::Channel.new(name: "sieve_#{num}".to_sym, type: Integer)
+  out = channel!(:type => Integer)
 
-  go do
+  go! do
     ch = generate(num)
     loop do
       prime = ch.receive
@@ -49,7 +49,7 @@ Benchmark.bm do |x|
     runners = []
 
     concurrency.times do |n|
-      runners << go do
+      runners << go! do
         primes = sieve(n)
         nth_prime.times { primes.receive }
       end

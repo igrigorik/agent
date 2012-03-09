@@ -7,24 +7,24 @@ describe "Channel of Channels" do
   it "should be able to pass channels as first class citizens" do
     server = Proc.new do |reqs|
       2.times do |n|
-        res = Request.new(n, Agent::Channel.new(:name => "resultChan_#{n}".to_sym, :type => Integer))
+        res = Request.new(n, channel!(:type => Integer))
 
         reqs << res
-        res.resultChan.receive.should == n+1
+        res.resultChan.receive[0].should == n+1
       end
     end
 
     worker = Proc.new do |reqs|
       loop do
-        req = reqs.receive
+        req = reqs.receive[0]
         req.resultChan << req.args+1
       end
     end
 
-    clientRequests = Agent::Channel.new(:name => :clientRequests, :type => Request)
+    clientRequests = channel!(:type => Request)
 
-    s = go(clientRequests, &server)
-    c = go(clientRequests, &worker)
+    s = go!(clientRequests, &server)
+    c = go!(clientRequests, &worker)
 
     s.join
     clientRequests.close
@@ -33,24 +33,24 @@ describe "Channel of Channels" do
   it "should work with multiple workers" do
     worker = Proc.new do |reqs|
       loop do
-        req = reqs.receive
+        req = reqs.receive[0]
         req.resultChan << req.args+1
       end
     end
 
-    clientRequests = Agent::Channel.new(:name => :clientRequests, :type => Request)
+    clientRequests = channel!(:type => Request)
 
     # start multiple workers
-    go(clientRequests, &worker)
-    go(clientRequests, &worker)
+    go!(clientRequests, &worker)
+    go!(clientRequests, &worker)
 
     # start server
-    s = go clientRequests do |reqs|
+    s = go! clientRequests do |reqs|
       2.times do |n|
-        res = Request.new(n, Agent::Channel.new(:name => "resultChan_#{n}".to_sym, :type => Integer))
+        res = Request.new(n, channel!(:type => Integer))
 
         reqs << res
-        res.resultChan.receive.should == n+1
+        res.resultChan.receive[0].should == n+1
       end
     end
 

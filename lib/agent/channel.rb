@@ -1,101 +1,125 @@
-# Channels combine communication—the exchange of a value—with synchronization—guaranteeing
-# that two calculations (goroutines) are in a known state.
-# - http://golang.org/doc/effective_go.html#channels
+require "agent/uuid"
+require "agent/push"
+require "agent/pop"
+require "agent/queues"
+require "agent/errors"
 
 module Agent
+  def self.channel!(options)
+    Agent::Channel.new(options)
+  end
+
   class Channel
-    attr_reader :name, :transport, :chan
+    attr_reader :name, :chan, :queue
+
+    class InvalidDirection < Exception; end
+    class Untyped < Exception; end
+    class InvalidType < Exception; end
+    class ChannelClosed < Exception; end
 
     def initialize(opts = {})
-      raise InvalidName if !opts[:name].is_a?(Symbol) || opts[:name].nil?
-      raise Untyped if opts[:type].nil?
+      raise Untyped unless opts[:type]
 
-      @state      = :active
-      @name       = opts[:name]
+      # Module includes both classes and modules
+      raise InvalidType unless opts[:type].is_a?(Module)
+
+      @state      = :open
+      @name       = opts[:name] || Agent::UUID.generate
       @max        = opts[:size] || 1
       @type       = opts[:type]
       @direction  = opts[:direction] || :bidirectional
-      @transport  = opts[:transport] || Agent::Transport::Queue
-      @rcb, @wcb  = [], []
 
-      @chan = @transport.new(@name, @max)
+      @queue = Queues.register(@name, @max)
     end
 
+    def queue
+      return @queue if @queue
+
+      raise ChannelClosed
+    end
+
+
+    # Serialization methods
+
     def marshal_load(ary)
-      @state, @name, @type, @direction, @transport, @rcb, @wcb = *ary
-      @chan = @transport.new(@name)
+      @state, @name, @max, @type, @direction = *ary
+      @queue = Queues.queues[@name]
       self
     end
 
-    def register_callback(type, c)
-      case type
-      when :receive then @rcb << c
-      when :send    then @wcb << c
-      end
-    end
-
-    def remove_callback(type, name)
-      case type
-      when :receive then @rcb.delete_if {|c| c.chan.name == name }
-      when :send    then @wcb.delete_if {|c| c.chan.name == name }
-      end
-    end
-
     def marshal_dump
-      [@state, @name, @type, @direction, @transport, @rcb, @wcb]
+      [@state, @name, @max, @type, @direction]
     end
 
-    def push?; @chan.push?; end
-    alias :send? :push?
 
-    def send(msg, nonblock = false)
+    # Sending methods
+
+    def send(object, options={})
       check_direction(:send)
-      check_type(msg)
+      check_type(object)
 
-      @chan.send(Marshal.dump(msg), nonblock)
-      callback(:receive, @rcb.shift)
+      push = Push.new(object, options)
+      queue.push(push)
+
+      return push if options[:deferred]
+
+      push.wait
     end
     alias :push :send
     alias :<<   :send
 
-    def pop?; @chan.pop?; end
-    alias :receive? :pop?
+    def push?; queue.push?; end
+    alias :send? :push?
 
-    def receive(nonblock = false)
+
+    # Receiving methods
+
+    def receive(options={})
       check_direction(:receive)
 
-      msg = Marshal.load(@chan.receive(nonblock))
-      check_type(msg)
-      callback(:send, @wcb.shift)
+      pop = Pop.new(options)
+      queue.pop(pop)
 
-      msg
+      return pop if options[:deferred]
+
+      ok = pop.wait
+      [pop.object, ok]
     end
     alias :pop  :receive
 
-    def closed?; @state == :closed; end
+    def pop?; queue.pop?; end
+    alias :receive? :pop?
+
+
+    # Closing methods
+
     def close
-      @chan.close
+      return if @state == :closed
       @state = :closed
+      queue.close
+      Queues.remove(@name)
+    end
+    def closed?; @state == :closed; end
+    def open?;   @state == :open;   end
+
+    def remove_operations(operations)
+      # ugly, but it overcomes the race condition without synchronization
+      # since instance variable access is atomic.
+      q = @queue
+      q.remove_operations(operations) if q
     end
 
-    private
 
-      def callback(type, c)
-        c.send Agent::Notification.new(type, self) if c
-      end
+  private
 
-      def check_type(msg)
-        raise InvalidType if !msg.is_a? @type
-      end
+    def check_type(object)
+      raise InvalidType unless object.is_a?(@type)
+    end
 
-      def check_direction(direction)
-        return if @direction == :bidirectional
-        raise InvalidDirection if @direction != direction
-      end
+    def check_direction(direction)
+      return if @direction == :bidirectional
+      raise InvalidDirection if @direction != direction
+    end
 
-      class InvalidDirection < Exception; end
-      class InvalidName < Exception; end
-      class Untyped < Exception; end
-      class InvalidType < Exception; end
   end
 end

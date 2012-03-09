@@ -8,9 +8,9 @@ describe "sieve of Eratosthenes" do
 
     # send the sequence 2,3,4, ... to returned channel
     def generate
-      ch = Agent::Channel.new(name: :generator, type: Integer)
+      ch = channel!(:type => Integer)
 
-      go do
+      go! do
         i = 1
         loop { ch << i+= 1 }
       end
@@ -20,11 +20,11 @@ describe "sieve of Eratosthenes" do
 
     # filter out input values divisible by *prime*, send rest to returned channel
     def filter(in_channel, prime)
-      out = Agent::Channel.new(name: "filter_#{prime}".to_sym, type: Integer)
+      out = channel!(:type => Integer)
 
-      go do
+      go! do
         loop do
-          i = in_channel.receive
+          i = in_channel.receive[0]
           out << i if (i % prime) != 0
         end
       end
@@ -33,12 +33,12 @@ describe "sieve of Eratosthenes" do
     end
 
     def sieve
-      out = Agent::Channel.new(name: :sieve, type: Integer)
+      out = channel!(:type => Integer)
 
-      go do
+      go! do
         ch = generate
         loop do
-          prime = ch.receive
+          prime = ch.receive[0]
           out << prime
           ch = filter(ch, prime)
         end
@@ -56,10 +56,10 @@ describe "sieve of Eratosthenes" do
 
     if nth
       n.times { primes.receive }
-      puts primes.receive
+      puts primes.receive[0]
     else
       loop do
-        p = primes.receive
+        p = primes.receive[0]
 
         if p <= n
           result << p
@@ -76,9 +76,9 @@ describe "sieve of Eratosthenes" do
 
     # send the sequence 2,3,4, ... to returned channel
     generate = Proc.new do
-      ch = Agent::Channel.new(name: :generator_block, type: Integer)
+      ch = channel!(:type => Integer)
 
-      go do
+      go! do
         i = 1
         loop { ch << i+= 1 }
       end
@@ -88,11 +88,11 @@ describe "sieve of Eratosthenes" do
 
     # filter out input values divisible by *prime*, send rest to returned channel
     filtr = Proc.new do |in_channel, prime|
-      out = Agent::Channel.new(name: "filter_#{prime}_block".to_sym, type: Integer)
+      out = channel!(:type => Integer)
 
-      go do
+      go! do
         loop do
-          i = in_channel.receive
+          i = in_channel.receive[0]
           out << i if (i % prime) != 0
         end
       end
@@ -101,13 +101,13 @@ describe "sieve of Eratosthenes" do
     end
 
     sieve = Proc.new do
-      out = Agent::Channel.new(name: :sieve_block, type: Integer)
+      out = channel!(:type => Integer)
 
-      go do
+      go! do
         ch = generate.call
 
         loop do
-          prime = ch.receive
+          prime = ch.receive[0]
           out << prime
           ch = filtr.call(ch, prime)
         end
@@ -125,10 +125,10 @@ describe "sieve of Eratosthenes" do
 
     if nth
       n.times { primes.receive }
-      puts primes.receive
+      puts primes.receive[0]
     else
       loop do
-        p = primes.receive
+        p = primes.receive[0]
 
         if p <= n
           result << p

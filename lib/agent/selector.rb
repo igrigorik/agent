@@ -1,83 +1,101 @@
+require "agent/uuid"
+require "agent/push"
+require "agent/pop"
+require "agent/channel"
+require "agent/notifier"
+require "agent/errors"
+
 module Agent
-  Notification = Struct.new(:type, :chan)
+  def self.select!
+    raise BlockMissing unless block_given?
+    selector = Agent::Selector.new
+    yield selector
+    selector.select
+  ensure
+    selector && selector.dequeue_unrunnable_operations
+  end
 
   class Selector
     attr_reader :cases
 
+    class DefaultCaseAlreadyDefinedError < Exception; end
+
+    Case = Struct.new(:uuid, :channel, :direction, :value, :blk)
+
     def initialize
-      @cases = {}
-      @r, @w = [], []
-      @immediate = nil
-      @default = nil
+      @ordered_cases = []
+      @cases         = {}
+      @operations    = {}
+      @once          = Once.new
+      @notifier      = Notifier.new
     end
 
-    def default(&blk); @default = blk; end
+    def default(&blk)
+      if @default_case
+        @default_case.channel.close
+        raise DefaultCaseAlreadyDefinedError
+      else
+        @default_case = self.case(channel!(:type => TrueClass), :receive, &blk)
+      end
+    end
 
     def timeout(t, &blk)
-      s = Agent::Channel.new(name: uuid_channel, :type => TrueClass)
-      go(s) { sleep t; s.send true; s.close }
+      s = channel!(:type => TrueClass)
+      go!{ sleep t; s.send(true); s.close }
       self.case(s, :receive, &blk)
     end
 
-    def case(c, op, &blk)
-      raise "invalid case, must be a channel" if !c.is_a? Agent::Channel
-
-      condition = c.__send__("#{op}?")
-      return unless blk
-
-      case op
-        when :send    then @w.push c
-        when :receive then @r.push c
-      end
-
-      @cases["#{c.name}-#{op}"] = blk
-      @immediate ||= blk if condition
+    def case(chan, direction, value=nil, &blk)
+      raise "invalid case, must be a channel" unless chan.is_a?(Agent::Channel)
+      raise BlockMissing unless blk
+      uuid = Agent::UUID.generate
+      cse = Case.new(uuid, chan, direction, value, blk)
+      @ordered_cases << cse
+      @cases[uuid] = cse
+      @operations[chan] = []
+      cse
     end
 
     def select
-      if @immediate
-        @immediate.call
-      elsif !@default.nil?
-        @default.call
-      else
+      if !@ordered_cases.empty?
+        options = {:once => @once, :notifier => @notifier, :deferred => true}
 
-        op, c = nil, nil
-        if !@r.empty? || !@w.empty?
-
-          s = Agent::Channel.new(name: uuid_channel, :type => Agent::Notification)
-          @w.map {|c| c.register_callback(:send, s) }
-          @r.map {|c| c.register_callback(:receive, s) }
-
-          begin
-            n = s.receive
-
-            case n.type
-              when :send    then @w.map {|c| c.remove_callback(:send, n.chan.name)}
-              when :receive then @r.map {|c| c.remove_callback(:receive, n.chan.name)}
-            end
-
-            op, c = @cases["#{n.chan.name}-#{n.type}"], n.chan
-          rescue Exception => e
-            if e.message =~ /deadlock/
-              raise Exception.new("Selector deadlock: can't select on channel running in same goroutine")
-            else
-              raise e
-            end
-          ensure
-            s.close
+        @ordered_cases.each do |cse|
+          if cse.direction == :send
+            @operations[cse.channel] << cse.channel.send(cse.value, :uuid => cse.uuid,
+                                                                    :once => @once,
+                                                                    :notifier => @notifier,
+                                                                    :deferred => true)
+          else # :receive
+            @operations[cse.channel] << cse.channel.receive(:uuid => cse.uuid,
+                                                            :once => @once,
+                                                            :notifier => @notifier,
+                                                            :deferred => true)
           end
-
         end
 
-        op.call(c) if op
+        if @default_case
+          @default_case.channel.send(true, :uuid => @default_case.uuid, :once => @once, :notifier => @notifier, :deferred => true)
+        end
+
+        @notifier.wait
+        operation = @notifier.payload
+
+        if operation.is_a?(Push)
+          @cases[operation.uuid].blk.call
+        else # Pop
+          @cases[operation.uuid].blk.call(operation.object)
+        end
+
+        @default_case.channel.close if @default_case
       end
     end
 
-    private
-
-      def uuid_channel
-        SecureRandom.uuid.gsub('-','_').to_sym
+    def dequeue_unrunnable_operations
+      @operations.each do |channel, operations|
+        channel.remove_operations(operations)
       end
+    end
 
   end
 end

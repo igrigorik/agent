@@ -49,14 +49,15 @@ describe "Producer-Consumer" do
       s << "consumer finished"
     end
 
-    c = Agent::Channel.new(name: :c, type: Integer)
-    s = Agent::Channel.new(name: :s, type: String)
+    c = channel!(:type => Integer)
+    s = channel!(:type => String)
 
-    go(c, 3, s, &producer)
-    go(c, 3, s, &consumer)
+    go!(c, 3, s, &producer)
+    sleep 0.1
+    go!(c, 3, s, &consumer)
 
-    s.pop.should == "producer finished"
-    s.pop.should == "consumer finished"
+    s.pop[0].should == "producer finished"
+    s.pop[0].should == "consumer finished"
 
     c.close
     s.close
@@ -68,13 +69,13 @@ describe "Producer-Consumer" do
     end
 
     Generator = Struct.new(:name, :pipe)
-    c = Agent::Channel.new(name: :incr, type: Integer)
+    c = channel!(:type => Integer)
     g = Generator.new(:incr, c)
 
-    go(g, &producer)
+    go!(g, &producer)
 
-    c.receive.should == 1
-    c.receive.should == 2
-    c.receive.should == 3
+    c.receive[0].should == 1
+    c.receive[0].should == 2
+    c.receive[0].should == 3
   end
 end

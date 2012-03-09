@@ -1,54 +1,33 @@
 require "spec_helper"
-include Agent::Transport
 
-describe Agent::Transport::Queue do
-  include Agent::Transport
-
-  it "should support synchronous, unbuffered communication" do
-    lambda { Agent::Transport::Queue.new("spec") }.should_not raise_error
-
-    q = Agent::Transport::Queue.new("spec")
-    q.max.should == 1
-    q.async?.should be_false
-
-    lambda { q.send("hello") }.should_not raise_error
-    lambda { q.send("hello", true) }.should raise_error(ThreadError, "buffer full")
-
-    q.receive.should == "hello"
-    lambda { q.receive(true) }.should raise_error(ThreadError, "buffer empty")
+describe Agent::Queue do
+  before do
+    @queue = Agent::Queue.new("name", 2)
   end
 
-  it "should support asynchronous, buffered communication" do
-    lambda { Agent::Transport::Queue.new("spec", 2) }.should_not raise_error
-
-    q = Agent::Transport::Queue.new("spec", 2)
-    q.max.should == 2
-    q.async?.should be_true
-
-    lambda { q.send("hello 1") }.should_not raise_error
-    lambda { q.send("hello 2", true) }.should_not raise_error(ThreadError, "buffer full")
-    lambda { q.send("hello 3", true) }.should raise_error(ThreadError, "buffer full")
-
-    q.receive.should == "hello 1"
-    q.receive.should == "hello 2"
-    lambda { q.receive(true) }.should raise_error(ThreadError, "buffer empty")
+  it "should be able to be pushed to" do
+    lambda{ @queue.push(Agent::Push.new("1")) }.should_not raise_error
   end
 
-  it "should persist data between queue objects" do
-    q = Agent::Transport::Queue.new("spec")
-    q.send "hello"
-
-    q = Agent::Transport::Queue.new("spec")
-    q.receive.should == "hello"
+  it "should mark the push as sent" do
+    push = Agent::Push.new("1")
+    @queue.push(push)
+    push.wait
+    push.sent?.should == true
   end
 
-   it "should clear registry on close" do
-     q = Agent::Transport::Queue.new("spec")
-     q.send "hello"
-     q.close
+  context "when there are elements in the queue" do
+    before do
+      push = Agent::Push.new("1")
+      @queue.push(push)
+      push.wait
+    end
 
-     q = Agent::Transport::Queue.new("spec")
-     lambda { q.receive(true) }.should raise_error(ThreadError, "buffer empty")
-   end
-
+    it "should be able to be popped from" do
+      pop = Agent::Pop.new
+      @queue.pop(pop)
+      pop.wait
+      pop.object.should == "1"
+    end
+  end
 end

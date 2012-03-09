@@ -6,7 +6,7 @@ require 'lib/agent'
 # second.
 
 Request = Struct.new(:args, :resultChan)
-clientRequests = Agent::Channel.new(name: :clientRequests, type: Request, size: 2)
+clientRequests = channel!(:type => Request, :size => 2)
 
 # Now, we create a new worker block, which takes in a “reqs” object, calls receive on it
 # (hint, req’s is a Channel!), sleeps for a bit, and then sends back a timestamped
@@ -22,15 +22,15 @@ worker = Proc.new do |reqs|
 end
 
 # start two workers
-go(clientRequests, &worker)
-go(clientRequests, &worker)
+go!(clientRequests, &worker)
+go!(clientRequests, &worker)
 
 # The rest is simple, we create two distinct requests, which carry a number and a reply
 # channel, and pass them to our clientRequests pipe, on which our workers are waiting.
 # Once dispatched, we simply call receive and wait for the results!
 
-req1 = Request.new(1, Agent::Channel.new(:name => :resultChan1, :type => String))
-req2 = Request.new(2, Agent::Channel.new(:name => :resultChan2, :type => String))
+req1 = Request.new(1, channel!(:type => String))
+req2 = Request.new(2, channel!(:type => String))
 
 clientRequests << req1
 clientRequests << req2
