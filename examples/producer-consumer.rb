@@ -11,3 +11,5 @@ end
 
 p c.receive[0] # => 1
 p c.receive[0] # => 2
+
+c.close
