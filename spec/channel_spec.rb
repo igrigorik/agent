@@ -10,11 +10,15 @@ describe Agent::Channel do
   end
 
   it "should not require a name" do
-    lambda { channel!(:type => String) }.should_not raise_error
+    c = nil
+    lambda { c = channel!(:type => String) }.should_not raise_error
+    c.close
   end
 
   it "allow the name to be set" do
-    channel!(:type => String, :name => "gibberish").name.should == "gibberish"
+    c = channel!(:type => String, :name => "gibberish")
+    c.name.should == "gibberish"
+    c.close
   end
 
   it "should respond to close" do
@@ -71,6 +75,7 @@ describe Agent::Channel do
         s.timeout(0.1){ timed_out = true }
       end
       timed_out.should == true
+      c.close
     end
 
     it "should default to bi-directional communication" do
@@ -82,7 +87,9 @@ describe Agent::Channel do
   context "typed" do
     it "should create a typed channel" do
       lambda { channel!({}) }.should raise_error Agent::Channel::Untyped
-      lambda { channel!(:type => Integer) }.should_not raise_error
+      c = nil
+      lambda { c = channel!(:type => Integer) }.should_not raise_error
+      c.close
     end
 
     it "should reject messages of invalid type" do
