@@ -6,30 +6,39 @@ describe Agent::Channel do
   end
 
   after do
-    @c.close
+    @c.close unless @c.closed?
   end
 
-  it "should not require a name" do
-    c = nil
-    lambda { c = channel!(:type => String) }.should_not raise_error
-    c.close
+  context "naming" do
+    it "should not be required" do
+      c = nil
+      lambda { c = channel!(:type => String) }.should_not raise_error
+      c.close
+    end
+
+    it "be able to be set" do
+      c = channel!(:type => String, :name => "gibberish")
+      c.name.should == "gibberish"
+      c.close
+    end
   end
 
-  it "allow the name to be set" do
-    c = channel!(:type => String, :name => "gibberish")
-    c.name.should == "gibberish"
-    c.close
-  end
+  context "closing" do
+    it "not raise an error the first time it is called" do
+      lambda { @c.close }.should_not raise_error
+      @c.closed?.should be_true
+    end
 
-  it "should respond to close" do
-    lambda { @c.close }.should_not raise_error
-    @c.closed?.should be_true
-  end
+    it "should raise an error the second time it is called" do
+      @c.close
+      lambda { @c.close }.should raise_error(Agent::Channel::ChannelClosed)
+    end
 
-  it "should respond to closed?" do
-    @c.closed?.should be_false
-    @c.close
-    @c.closed?.should be_true
+    it "should respond to closed?" do
+      @c.closed?.should be_false
+      @c.close
+      @c.closed?.should be_true
+    end
   end
 
   context "deadlock" do

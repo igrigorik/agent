@@ -29,15 +29,15 @@ module Agent
       @type       = opts[:type]
       @direction  = opts[:direction] || :bidirectional
 
+      @close_mutex = Mutex.new
+
       @queue = Queues.register(@name, @max)
     end
 
     def queue
-      if closed?
-        raise ChannelClosed
-      else
-        @queue
-      end
+      q = @queue
+      raise ChannelClosed unless q
+      q
     end
 
 
@@ -97,10 +97,13 @@ module Agent
     # Closing methods
 
     def close
-      return if @state == :closed
-      @state = :closed
-      @queue.close
-      Queues.remove(@name)
+      @close_mutex.synchronize do
+        raise ChannelClosed if @state == :closed
+        @state = :closed
+        @queue.close
+        @queue = nil
+        Queues.remove(@name)
+      end
     end
     def closed?; @state == :closed; end
     def open?;   @state == :open;   end
