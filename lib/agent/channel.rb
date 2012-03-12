@@ -33,9 +33,11 @@ module Agent
     end
 
     def queue
-      return @queue if @queue
-
-      raise ChannelClosed
+      if closed?
+        raise ChannelClosed
+      else
+        @queue
+      end
     end
 
 
@@ -44,6 +46,7 @@ module Agent
     def marshal_load(ary)
       @state, @name, @max, @type, @direction = *ary
       @queue = Queues.queues[@name]
+      @state = :closed unless @queue
       self
     end
 
