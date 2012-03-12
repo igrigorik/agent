@@ -45,3 +45,7 @@ puts req2.resultChan.receive[0]  # => 2010-11-28 23:31:08 -0500 : 3
 # clientRequests channel allowed for up to two messages in the pipe, which our workers
 # immediately received, executed, and returned the results.  Once again, not a thread
 # or a mutex in sight.
+
+clientRequests.close
+req1.resultChan.close
+req2.resultChan.close
