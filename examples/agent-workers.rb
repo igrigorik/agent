@@ -1,4 +1,6 @@
-require 'lib/agent'
+project_lib_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
+$LOAD_PATH.unshift(project_lib_path)
+require 'agent'
 
 # First, we declare a new Ruby struct, which will encapsulate several arguments, and then
 # declare a clientRequests channel, which will carry our Request struct. Nothing unusual,
@@ -15,7 +17,7 @@ clientRequests = channel!(:type => Request, :size => 2)
 
 worker = Proc.new do |reqs|
   loop do
-    req = reqs.receive
+    req = reqs.receive[0]
     sleep 1.0
     req.resultChan << [Time.now, req.args + 1].join(' : ')
   end
@@ -36,8 +38,8 @@ clientRequests << req1
 clientRequests << req2
 
 # retrieve results
-puts req1.resultChan.receive  # => 2010-11-28 23:31:08 -0500 : 2
-puts req2.resultChan.receive  # => 2010-11-28 23:31:08 -0500 : 3
+puts req1.resultChan.receive[0]  # => 2010-11-28 23:31:08 -0500 : 2
+puts req2.resultChan.receive[0]  # => 2010-11-28 23:31:08 -0500 : 3
 
 # Notice something interesting? Both results came back with the same timestamp! Our
 # clientRequests channel allowed for up to two messages in the pipe, which our workers

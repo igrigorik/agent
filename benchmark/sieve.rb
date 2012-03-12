@@ -1,5 +1,6 @@
 require 'benchmark'
-$: << File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
+project_lib_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
+$LOAD_PATH.unshift(project_lib_path)
 require 'agent'
 
 def generate
