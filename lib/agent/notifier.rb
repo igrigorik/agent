@@ -15,7 +15,7 @@ module Agent
 
     def wait
       @monitor.synchronize do
-        @cvar.wait_while { !notified? }
+        @cvar.wait_until { notified? }
       end
     end
 

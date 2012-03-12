@@ -27,7 +27,7 @@ module Agent
 
     def wait
       @monitor.synchronize do
-        @cvar.wait_while{ !received? && !closed? }
+        @cvar.wait_until{ received? || closed? }
         return received?
       end
     end

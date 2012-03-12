@@ -27,7 +27,7 @@ module Agent
 
     def wait
       @monitor.synchronize do
-        @cvar.wait_while { !sent? && !closed? }
+        @cvar.wait_until { sent? || closed? }
         raise ChannelClosed if closed?
       end
     end
