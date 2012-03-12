@@ -78,5 +78,6 @@ describe "Producer-Consumer" do
     c.receive[0].should == 1
     c.receive[0].should == 2
     c.receive[0].should == 3
+    c.close
   end
 end
