@@ -58,8 +58,6 @@ module Agent
 
     def select
       if !@ordered_cases.empty?
-        options = {:once => @once, :notifier => @notifier, :deferred => true}
-
         @ordered_cases.each do |cse|
           if cse.direction == :send
             @operations[cse.channel] << cse.channel.send(cse.value, :uuid => cse.uuid,
