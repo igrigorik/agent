@@ -11,6 +11,7 @@ describe "Channel of Channels" do
 
         reqs << res
         res.resultChan.receive[0].should == n+1
+        res.resultChan.close
       end
     end
 
@@ -51,6 +52,7 @@ describe "Channel of Channels" do
 
         reqs << res
         res.resultChan.receive[0].should == n+1
+        res.resultChan.close
       end
     end
 
