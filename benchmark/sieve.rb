@@ -1,19 +1,20 @@
 require 'benchmark'
-require 'lib/agent'
+$: << File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
+require 'agent'
 
-def generate(num)
+def generate
   ch = channel!(:type => Integer)
-  go! { |i=1| loop { ch << i+= 1} }
+  go!{ i = 1; loop { ch << i+= 1} }
 
   return ch
 end
 
-def filter(in_channel, prime, num)
+def filter(in_channel, prime)
   out = channel!(:type => Integer)
 
   go! do
     loop do
-      i = in_channel.receive
+      i, _ = in_channel.receive
       out << i if (i % prime) != 0
     end
   end
@@ -21,15 +22,15 @@ def filter(in_channel, prime, num)
   return out
 end
 
-def sieve(num)
+def sieve
   out = channel!(:type => Integer)
 
   go! do
-    ch = generate(num)
+    ch = generate
     loop do
-      prime = ch.receive
+      prime, _ = ch.receive
       out << prime
-      ch = filter(ch, prime, num)
+      ch = filter(ch, prime)
     end
   end
 
@@ -50,7 +51,7 @@ Benchmark.bm do |x|
 
     concurrency.times do |n|
       runners << go! do
-        primes = sieve(n)
+        primes = sieve
         nth_prime.times { primes.receive }
       end
     end
@@ -59,14 +60,8 @@ Benchmark.bm do |x|
   end
 end
 
-#
-# ruby 1.9.2p0 (2010-08-18 revision 29036) [x86_64-darwin10.4.0]
-#         user       system     total       real
-# receive 15.200000  17.200000  32.400000 ( 25.582619)
-#
-# --------------
-#
-# jruby 1.5.2 (ruby 1.8.7 patchlevel 249) (2010-08-20 1c5e29d) (Java HotSpot(TM) 64-Bit Server VM 1.6.0_22) [x86_64-java]
-#          user       system     total       real
-# receive  9.435000   0.000000   9.435000 (  9.359000)
-#
+#       (osx lion's) ruby 1.8.7-p249 - 79.6s (omg)
+#                    ruby 1.9.2-p318 - 10.1s
+#                    ruby 1.9.3-p125 - 11.4s
+# (1.8.7-p357 w/o --1.9) jruby 1.6.7 - 16.4s
+#   (1.8.7-p357 w --1.9) jruby 1.6.7 - 13.4s

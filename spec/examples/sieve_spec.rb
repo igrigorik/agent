@@ -9,11 +9,7 @@ describe "sieve of Eratosthenes" do
     # send the sequence 2,3,4, ... to returned channel
     def generate
       ch = channel!(:type => Integer)
-
-      go! do
-        i = 1
-        loop { ch << i+= 1 }
-      end
+      go!{ i = 1; loop { ch << i+= 1} }
 
       return ch
     end
