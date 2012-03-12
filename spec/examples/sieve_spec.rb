@@ -7,16 +7,18 @@ describe "sieve of Eratosthenes" do
   it "should work using Channel primitives" do
 
     # send the sequence 2,3,4, ... to returned channel
-    def generate
+    def generate(channels)
       ch = channel!(:type => Integer)
+      channels << ch
       go!{ i = 1; loop { ch << i+= 1} }
 
       return ch
     end
 
     # filter out input values divisible by *prime*, send rest to returned channel
-    def filter(in_channel, prime)
+    def filter(in_channel, prime, channels)
       out = channel!(:type => Integer)
+      channels << out
 
       go! do
         loop do
@@ -28,15 +30,16 @@ describe "sieve of Eratosthenes" do
       return out
     end
 
-    def sieve
+    def sieve(channels)
       out = channel!(:type => Integer)
+      channels << out
 
       go! do
-        ch = generate
+        ch = generate(channels)
         loop do
           prime, _ = ch.receive
           out << prime
-          ch = filter(ch, prime)
+          ch = filter(ch, prime, channels)
         end
       end
 
@@ -46,8 +49,9 @@ describe "sieve of Eratosthenes" do
     # run the sieve
     n = 20
     nth = false
+    channels = []
 
-    primes = sieve
+    primes = sieve(channels)
     result = []
 
     if nth
@@ -66,13 +70,15 @@ describe "sieve of Eratosthenes" do
     end
 
     result.should == [2,3,5,7,11,13,17,19]
+    channels.each(&:close)
   end
 
   it "should work with Ruby blocks" do
 
     # send the sequence 2,3,4, ... to returned channel
-    generate = Proc.new do
+    generate = Proc.new do |channels|
       ch = channel!(:type => Integer)
+      channels << ch
 
       go! do
         i = 1
@@ -83,8 +89,9 @@ describe "sieve of Eratosthenes" do
     end
 
     # filter out input values divisible by *prime*, send rest to returned channel
-    filtr = Proc.new do |in_channel, prime|
+    filtr = Proc.new do |in_channel, prime, channels|
       out = channel!(:type => Integer)
+      channels << out
 
       go! do
         loop do
@@ -96,16 +103,17 @@ describe "sieve of Eratosthenes" do
       out
     end
 
-    sieve = Proc.new do
+    sieve = Proc.new do |channels|
       out = channel!(:type => Integer)
+      channels << out
 
       go! do
-        ch = generate.call
+        ch = generate.call(channels)
 
         loop do
           prime, _ = ch.receive
           out << prime
-          ch = filtr.call(ch, prime)
+          ch = filtr.call(ch, prime, channels)
         end
       end
 
@@ -115,8 +123,9 @@ describe "sieve of Eratosthenes" do
     # run the sieve
     n = 20
     nth = false
+    channels = []
 
-    primes = sieve.call
+    primes = sieve.call(channels)
     result = []
 
     if nth
@@ -135,5 +144,6 @@ describe "sieve of Eratosthenes" do
     end
 
     result.should == [2,3,5,7,11,13,17,19]
+    channels.each(&:close)
   end
 end
