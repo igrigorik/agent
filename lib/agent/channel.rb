@@ -99,7 +99,7 @@ module Agent
     def close
       return if @state == :closed
       @state = :closed
-      queue.close
+      @queue.close
       Queues.remove(@name)
     end
     def closed?; @state == :closed; end
