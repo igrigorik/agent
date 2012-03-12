@@ -3,15 +3,17 @@ project_lib_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib
 $LOAD_PATH.unshift(project_lib_path)
 require 'agent'
 
-def generate
+def generate(channels)
   ch = channel!(:type => Integer)
+  channels << ch
   go!{ i = 1; loop { ch << i+= 1} }
 
   return ch
 end
 
-def filter(in_channel, prime)
+def filter(in_channel, prime, channels)
   out = channel!(:type => Integer)
+  channels << out
 
   go! do
     loop do
@@ -23,15 +25,17 @@ def filter(in_channel, prime)
   return out
 end
 
-def sieve
+def sieve(channels)
   out = channel!(:type => Integer)
+  channels << out
 
   go! do
-    ch = generate
+    ch = generate(channels)
     loop do
       prime, _ = ch.receive
       out << prime
-      ch = filter(ch, prime)
+      ch = filter(ch, prime, channels)
+      channels << ch
     end
   end
 
@@ -43,6 +47,7 @@ end
 
 nth_prime = 150
 concurrency = 5
+channels = []
 
 puts "#{nth_prime}'s prime, #{concurrency} goroutines"
 
@@ -52,7 +57,7 @@ Benchmark.bm do |x|
 
     concurrency.times do |n|
       runners << go! do
-        primes = sieve
+        primes = sieve(channels)
         nth_prime.times { primes.receive }
       end
     end
@@ -60,6 +65,8 @@ Benchmark.bm do |x|
     runners.map {|t| t.join}
   end
 end
+
+channels.each(&:close)
 
 #       (osx lion's) ruby 1.8.7-p249 - 79.6s (omg)
 #                    ruby 1.9.2-p318 - 10.1s
