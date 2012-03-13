@@ -42,7 +42,7 @@ describe Agent::Channel do
   end
 
   context "deadlock" do
-    it "should deadlock on single thread" do
+    it "should deadlock on single thread", :vm => :ruby do
       lambda { @c.receive }.should raise_error
     end
 
