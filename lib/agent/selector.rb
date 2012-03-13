@@ -47,7 +47,7 @@ module Agent
 
     def case(chan, direction, value=nil, &blk)
       raise "invalid case, must be a channel" unless chan.is_a?(Agent::Channel)
-      raise BlockMissing unless blk
+      raise BlockMissing unless blk || direction == :send
       uuid = Agent::UUID.generate
       cse = Case.new(uuid, chan, direction, value, blk)
       @ordered_cases << cse
@@ -80,7 +80,8 @@ module Agent
         operation = @notifier.payload
 
         if operation.is_a?(Push)
-          @cases[operation.uuid].blk.call
+          blk = @cases[operation.uuid].blk
+          blk && blk.call
         else # Pop
           @cases[operation.uuid].blk.call(operation.object)
         end

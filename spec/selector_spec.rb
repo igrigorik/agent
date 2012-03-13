@@ -26,13 +26,22 @@ describe Agent::Selector do
     end
   end
 
-  it "should raise an error when a block is missing" do
+  it "should raise an error when a block is missing on receive" do
+    lambda {
+      select! do |s|
+        s.case(@c, :receive)
+        s.cases.size.should == 0
+      end
+    }.should raise_error(Agent::BlockMissing)
+  end
+
+  it "should not raise an error when a block is missing on send" do
     lambda {
       select! do |s|
         s.case(@c, :send, 1)
         s.cases.size.should == 0
       end
-    }.should raise_error(Agent::BlockMissing)
+    }.should_not raise_error(Agent::BlockMissing)
   end
 
   it "should return immediately on empty select block" do
