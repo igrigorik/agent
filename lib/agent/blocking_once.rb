@@ -6,12 +6,11 @@ module Agent
       @monitor.synchronize do
         # Hold this mutex for the minimum amount of time possible, since mutexes are slow
         return nil, error if @performed
-        @performed = true
 
         begin
           return yield, nil
+          @performed = true
         rescue Rollback
-          @performed = false
           return nil, error
         end
       end

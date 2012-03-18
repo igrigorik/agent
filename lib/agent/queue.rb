@@ -168,7 +168,7 @@ module Agent
             value
           end
 
-          if !error || error.message?("already performed")
+          if error.nil? || error.message?("already performed")
             operations.shift
             pop_indexes.shift
             break
@@ -176,13 +176,6 @@ module Agent
         end
       end
     end
-
-
-
-
-
-
-
 
   end
 end
