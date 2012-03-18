@@ -1,8 +1,7 @@
 module Agent
   class Once
-    class AlreadyPerformedError < StandardError; end
     def initialize
-      @mutex     = Mutex.new
+      @monitor   = Monitor.new
       @performed = false
     end
 
@@ -11,7 +10,7 @@ module Agent
       return nil, error if @performed
 
       # slow path
-      @mutex.synchronize do
+      @monitor.synchronize do
         # Hold this mutex for the minimum amount of time possible, since mutexes are slow
         return nil, error if @performed
         @performed = true

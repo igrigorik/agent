@@ -3,7 +3,7 @@ module Agent
     attr_reader :name, :max, :queue, :operations, :push_indexes, :pop_indexes, :monitor
 
     def initialize(name, max = 1)
-      raise ArgumentError, "queue size must be at least 1" unless max > 0
+      raise ArgumentError, "queue size must be at least 0" unless max >= 0
 
       @name = name
       @max  = max
@@ -32,7 +32,7 @@ module Agent
 
     def push(p)
       monitor.synchronize do
-        raise ChannelClosed if closed?
+        raise Channel::ChannelClosed if closed?
         operations << p
         push_indexes << (operations.size - 1)
         process
@@ -42,7 +42,7 @@ module Agent
 
     def pop(p)
       monitor.synchronize do
-        raise ChannelClosed if closed?
+        raise Channel::ChannelClosed if closed?
         operations << p
         pop_indexes << (operations.size - 1)
         process
@@ -50,13 +50,13 @@ module Agent
     end
     def pop?; size > 0; end
 
-    def async?; @max > 1; end
+    def async?; @max > 0; end
 
     def remove_operations(ops)
       monitor.synchronize do
         return if closed?
 
-        ops.each do |operation|
+        ops.each_with_index do |operation, index|
           index = operations.index(operation)
           next unless index
           operations.delete_at(index)
@@ -73,6 +73,14 @@ module Agent
   protected
 
     def process
+      if max > 0
+        process_async
+      else
+        process_sync
+      end
+    end
+
+    def process_async
       return if (push_indexes.empty? || !push?) && (pop_indexes.empty? && !pop?)
 
       index = 0
@@ -123,8 +131,58 @@ module Agent
           break
         end
       end
-
     end
+
+    def process_sync
+      if operations[0].is_a?(Push)
+        until pop_indexes.empty?
+          error = operations[0].receive do |value|
+            error = operations[pop_indexes[0]].send do
+              value
+            end
+
+            operations.delete_at(pop_indexes[0])
+            pop_indexes.shift
+            raise Push::Rollback if error
+          end
+
+          if error.nil? || error.message?("already performed")
+            operations.shift
+            push_indexes.shift
+            break
+          end
+        end
+      else # Pop
+        until push_indexes.empty?
+          error = operations[0].send do
+            value = nil
+
+            error = operations[push_indexes[0]].receive do |v|
+              value = v
+            end
+
+            operations.delete_at(push_indexes[0])
+            push_indexes.shift
+            raise Pop::Rollback if error
+
+            value
+          end
+
+          if !error || error.message?("already performed")
+            operations.shift
+            pop_indexes.shift
+            break
+          end
+        end
+      end
+    end
+
+
+
+
+
+
+
 
   end
 end

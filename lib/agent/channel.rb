@@ -25,7 +25,7 @@ module Agent
 
       @state      = :open
       @name       = opts[:name] || Agent::UUID.generate
-      @max        = opts[:size] || 1
+      @max        = opts[:size] || 0
       @type       = opts[:type]
       @direction  = opts[:direction] || :bidirectional
 

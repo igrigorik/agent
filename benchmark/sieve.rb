@@ -35,7 +35,6 @@ def sieve(channels)
       prime, _ = ch.receive
       out << prime
       ch = filter(ch, prime, channels)
-      channels << ch
     end
   end
 

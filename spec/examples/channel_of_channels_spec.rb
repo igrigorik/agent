@@ -17,7 +17,8 @@ describe "Channel of Channels" do
 
     worker = Proc.new do |reqs|
       loop do
-        req, _ = reqs.receive
+        req, ok = reqs.receive
+        break unless ok
         req.resultChan << req.args+1
       end
     end

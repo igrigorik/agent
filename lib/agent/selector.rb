@@ -19,6 +19,7 @@ module Agent
     attr_reader :cases
 
     class DefaultCaseAlreadyDefinedError < Exception; end
+    class InvalidDirection < Exception; end
 
     Case = Struct.new(:uuid, :channel, :direction, :value, :blk)
 
@@ -26,7 +27,7 @@ module Agent
       @ordered_cases = []
       @cases         = {}
       @operations    = {}
-      @once          = Once.new
+      @blocking_once = BlockingOnce.new
       @notifier      = Notifier.new
     end
 
@@ -35,25 +36,21 @@ module Agent
         @default_case.channel.close
         raise DefaultCaseAlreadyDefinedError
       else
-        @default_case = self.case(channel!(:type => TrueClass), :receive, &blk)
+        @default_case = self.case(channel!(:type => TrueClass, :size => 1), :receive, &blk)
       end
     end
 
     def timeout(t, &blk)
-      s = channel!(:type => TrueClass)
+      s = channel!(:type => TrueClass, :size => 1)
       go!{ sleep t; s.send(true); s.close }
-      self.case(s, :receive, &blk)
+      add_case(s, :timeout, &blk)
     end
 
     def case(chan, direction, value=nil, &blk)
       raise "invalid case, must be a channel" unless chan.is_a?(Agent::Channel)
-      raise BlockMissing unless blk || direction == :send
-      uuid = Agent::UUID.generate
-      cse = Case.new(uuid, chan, direction, value, blk)
-      @ordered_cases << cse
-      @cases[uuid] = cse
-      @operations[chan] = []
-      cse
+      raise BlockMissing if blk.nil? && direction == :receive
+      raise InvalidDirection if direction != :send && direction != :receive
+      add_case(chan, direction, value, &blk)
     end
 
     def select
@@ -61,30 +58,24 @@ module Agent
         @ordered_cases.each do |cse|
           if cse.direction == :send
             @operations[cse.channel] << cse.channel.send(cse.value, :uuid => cse.uuid,
-                                                                    :once => @once,
+                                                                    :blocking_once => @blocking_once,
                                                                     :notifier => @notifier,
                                                                     :deferred => true)
-          else # :receive
+          else # :receive || :timeout
             @operations[cse.channel] << cse.channel.receive(:uuid => cse.uuid,
-                                                            :once => @once,
+                                                            :blocking_once => @blocking_once,
                                                             :notifier => @notifier,
                                                             :deferred => true)
           end
         end
 
         if @default_case
-          @default_case.channel.send(true, :uuid => @default_case.uuid, :once => @once, :notifier => @notifier, :deferred => true)
+          @default_case.channel.send(true, :uuid => @default_case.uuid, :blocking_once => @blocking_once, :notifier => @notifier, :deferred => true)
         end
 
         @notifier.wait
-        operation = @notifier.payload
 
-        if operation.is_a?(Push)
-          blk = @cases[operation.uuid].blk
-          blk && blk.call
-        else # Pop
-          @cases[operation.uuid].blk.call(operation.object)
-        end
+        execute_case(@notifier.payload)
 
         @default_case.channel.close if @default_case
       end
@@ -93,6 +84,30 @@ module Agent
     def dequeue_unrunnable_operations
       @operations.each do |channel, operations|
         channel.remove_operations(operations)
+      end
+    end
+
+  protected
+
+    def add_case(chan, direction, value=nil, &blk)
+      uuid = Agent::UUID.generate
+      cse = Case.new(uuid, chan, direction, value, blk)
+      @ordered_cases << cse
+      @cases[uuid] = cse
+      @operations[chan] = []
+      cse
+    end
+
+    def execute_case(operation)
+      cse = @cases[operation.uuid]
+      blk, direction = cse.blk, cse.direction
+
+      if blk
+        if direction == :send || direction == :timeout
+          blk.call
+        else # :receive
+          blk.call(operation.object)
+        end
       end
     end
 
