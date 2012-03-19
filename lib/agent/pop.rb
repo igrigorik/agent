@@ -36,7 +36,8 @@ module Agent
 
     def send
       @monitor.synchronize do
-        return if @closed
+        raise ChannelClosed if @closed
+
         if @blocking_once
           value, error = @blocking_once.perform do
             begin
