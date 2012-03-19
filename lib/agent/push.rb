@@ -35,34 +35,39 @@ module Agent
     end
 
     def receive
-      if @blocking_once
-        value, error = @blocking_once.perform do
+      @monitor.synchronize do
+        raise  if @closed
+        if @blocking_once
+          value, error = @blocking_once.perform do
+            begin
+              yield @object
+              @sent = true
+              @monitor.synchronize{ @cvar.signal }
+              @notifier.notify(self) if @notifier
+            rescue Rollback
+              raise BlockingOnce::Rollback
+            end
+          end
+
+          return error
+        else
           begin
             yield @object
             @sent = true
             @monitor.synchronize{ @cvar.signal }
             @notifier.notify(self) if @notifier
           rescue Rollback
-            raise BlockingOnce::Rollback
           end
-        end
-
-        return error
-      else
-        begin
-          yield @object
-          @sent = true
-          @monitor.synchronize{ @cvar.signal }
-          @notifier.notify(self) if @notifier
-        rescue Rollback
         end
       end
     end
 
     def close
       @monitor.synchronize do
+        return if @sent
         @closed = true
         @cvar.broadcast
+        @notifier.notify(self) if @notifier
       end
     end
 

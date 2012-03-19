@@ -12,7 +12,10 @@ module Agent
     yield selector
     selector.select
   ensure
-    selector && selector.dequeue_unrunnable_operations
+    if selector
+      selector.close_default_channel
+      selector.dequeue_unrunnable_operations
+    end
   end
 
   class Selector
@@ -76,8 +79,6 @@ module Agent
         @notifier.wait
 
         execute_case(@notifier.payload)
-
-        @default_case.channel.close if @default_case
       end
     end
 
@@ -86,6 +87,11 @@ module Agent
         channel.remove_operations(operations)
       end
     end
+
+    def close_default_channel
+      @default_case.channel.close if @default_case
+    end
+
 
   protected
 
@@ -99,6 +105,8 @@ module Agent
     end
 
     def execute_case(operation)
+      raise Agent::Channel::ChannelClosed if operation.closed?
+
       cse = @cases[operation.uuid]
       blk, direction = cse.blk, cse.direction
 

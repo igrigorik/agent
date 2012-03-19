@@ -35,34 +35,39 @@ module Agent
     end
 
     def send
-      if @blocking_once
-        value, error = @blocking_once.perform do
+      @monitor.synchronize do
+        return if @closed
+        if @blocking_once
+          value, error = @blocking_once.perform do
+            begin
+              @object = Marshal.load(yield)
+              @received = true
+              @monitor.synchronize{ @cvar.signal }
+              @notifier.notify(self) if @notifier
+            rescue Rollback
+              raise BlockingOnce::Rollback
+            end
+          end
+
+          return error
+        else
           begin
             @object = Marshal.load(yield)
             @received = true
             @monitor.synchronize{ @cvar.signal }
             @notifier.notify(self) if @notifier
           rescue Rollback
-            raise BlockingOnce::Rollback
           end
-        end
-
-        return error
-      else
-        begin
-          @object = Marshal.load(yield)
-          @received = true
-          @monitor.synchronize{ @cvar.signal }
-          @notifier.notify(self) if @notifier
-        rescue Rollback
         end
       end
     end
 
     def close
       @monitor.synchronize do
+        return if @received
         @closed = true
         @cvar.broadcast
+        @notifier.notify(self) if @notifier
       end
     end
 

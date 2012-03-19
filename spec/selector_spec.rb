@@ -33,7 +33,7 @@ describe Agent::Selector do
     end
 
     after do
-      @c.close
+      @c.close unless @c.closed?
     end
 
     it "should evaluate select statements top to bottom" do
@@ -90,6 +90,17 @@ describe Agent::Selector do
 
       r.size.should == 1
       r.first.should == :default
+    end
+
+    it "should raise an error if the channel is closed out from under it" do
+      go!{ sleep 0.25; @c.close }
+
+      lambda {
+        select! do |s|
+          s.case(@c, :send, 1)
+          s.case(@c, :receive){}
+        end
+      }.should raise_error(Agent::Channel::ChannelClosed)
     end
 
     context "select immediately available channel" do
@@ -207,7 +218,7 @@ describe Agent::Selector do
     end
 
     after do
-      @c.close
+      @c.close unless @c.closed?
     end
 
     it "should evaluate select statements top to bottom" do
@@ -262,6 +273,19 @@ describe Agent::Selector do
 
       r.size.should == 1
       r.first.should == :default
+    end
+
+    it "should raise an error if the channel is closed out from under it" do
+      @c.send(1)
+
+      go!{ sleep 0.25; @c.close }
+
+      lambda {
+        select! do |s|
+          s.case(@c, :send, 1)
+          s.case(@c, :send, 2){}
+        end
+      }.should raise_error(Agent::Channel::ChannelClosed)
     end
 
     context "select immediately available channel" do

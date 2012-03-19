@@ -77,7 +77,8 @@ describe Agent::BlockingOnce do
 
     finished_channel.close
 
-    (Time.now.to_f - s).should be_within(0.05).of(0.2)
+    # Three sleeps at 0.1 == 0.3, so if it's less than 0.3...
+    (Time.now.to_f - s).should < 0.3
   end
 
   it "should have minimal contention between threads when they contend for position" do
