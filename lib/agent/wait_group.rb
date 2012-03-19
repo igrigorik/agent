@@ -1,5 +1,7 @@
 module Agent
   class WaitGroup
+    class NegativeWaitGroupCount < Exception; end
+
     def initialize
       @count   = 0
       @monitor = Monitor.new
@@ -15,7 +17,7 @@ module Agent
     def add(delta)
       @monitor.synchronize do
         @count += delta
-        @count = 0 if @count < 0
+        raise NegativeWaitGroupCount if @count < 0
         @cvar.signal if @count == 0
       end
     end
