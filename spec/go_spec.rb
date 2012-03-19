@@ -1,6 +1,6 @@
 require "spec_helper"
 
-describe Agent do
+describe "Agent.go!" do
   it "should launch a 'goroutine' that is actually a thread" do
     Agent.go!{}.should be_a(Thread)
   end
