@@ -15,7 +15,6 @@ module Agent
     class InvalidDirection < Exception; end
     class Untyped < Exception; end
     class InvalidType < Exception; end
-    class ChannelClosed < Exception; end
 
     def initialize(opts = {})
       raise Untyped unless opts[:type]

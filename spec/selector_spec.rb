@@ -100,7 +100,7 @@ describe Agent::Selector do
           s.case(@c, :send, 1)
           s.case(@c, :receive){}
         end
-      }.should raise_error(Agent::Channel::ChannelClosed)
+      }.should raise_error(Agent::ChannelClosed)
     end
 
     context "select immediately available channel" do
@@ -285,7 +285,7 @@ describe Agent::Selector do
           s.case(@c, :send, 1)
           s.case(@c, :send, 2){}
         end
-      }.should raise_error(Agent::Channel::ChannelClosed)
+      }.should raise_error(Agent::ChannelClosed)
     end
 
     context "select immediately available channel" do

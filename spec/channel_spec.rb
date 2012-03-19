@@ -70,7 +70,7 @@ describe Agent::Channel do
 
     it "should raise an error the second time it is called" do
       @c.close
-      lambda { @c.close }.should raise_error(Agent::Channel::ChannelClosed)
+      lambda { @c.close }.should raise_error(Agent::ChannelClosed)
     end
 
     it "should respond to closed?" do
@@ -87,12 +87,12 @@ describe Agent::Channel do
 
     it "should raise an error when sending to a channel that has already been closed" do
       @c.close
-      lambda { @c.send("a") }.should raise_error(Agent::Channel::ChannelClosed)
+      lambda { @c.send("a") }.should raise_error(Agent::ChannelClosed)
     end
 
     it "should raise an error when receiving from a channel that has already been closed" do
       @c.close
-      lambda { @c.receive }.should raise_error(Agent::Channel::ChannelClosed)
+      lambda { @c.receive }.should raise_error(Agent::ChannelClosed)
     end
   end
 

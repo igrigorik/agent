@@ -105,7 +105,7 @@ module Agent
     end
 
     def execute_case(operation)
-      raise Agent::Channel::ChannelClosed if operation.closed?
+      raise ChannelClosed if operation.closed?
 
       cse = @cases[operation.uuid]
       blk, direction = cse.blk, cse.direction

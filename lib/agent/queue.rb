@@ -32,7 +32,7 @@ module Agent
 
     def push(p)
       monitor.synchronize do
-        raise Channel::ChannelClosed if closed?
+        raise ChannelClosed if closed?
         operations << p
         push_indexes << (operations.size - 1)
         process
@@ -42,7 +42,7 @@ module Agent
 
     def pop(p)
       monitor.synchronize do
-        raise Channel::ChannelClosed if closed?
+        raise ChannelClosed if closed?
         operations << p
         pop_indexes << (operations.size - 1)
         process
