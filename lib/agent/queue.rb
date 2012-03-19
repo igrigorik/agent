@@ -136,11 +136,8 @@ module Agent
     def process_sync
       operation = operations.last
 
-      delete_push_indexes = []
-      delete_pop_indexes = []
-
       if operation.is_a?(Push)
-        pop_indexes.each_with_index do |pop_index, i|
+        pop_indexes.dup.each_with_index do |pop_index, i|
           pop_operation = operations[pop_index]
 
           if operation.blocking_once && operation.blocking_once == pop_operation.blocking_once
@@ -153,7 +150,7 @@ module Agent
             end
 
             operations.delete_at(pop_index)
-            delete_pop_indexes << i
+            pop_indexes.delete_at(i)
             raise Push::Rollback if error
           end
 
@@ -164,7 +161,7 @@ module Agent
           end
         end
       else # Pop
-        push_indexes.each_with_index do |push_index, i|
+        push_indexes.dup.each_with_index do |push_index, i|
           push_operation = operations[push_index]
 
           if operation.blocking_once && operation.blocking_once == push_operation.blocking_once
@@ -179,7 +176,7 @@ module Agent
             end
 
             operations.delete_at(push_index)
-            delete_push_indexes << i
+            push_indexes.delete_at(i)
             raise Pop::Rollback if error
 
             value
@@ -193,8 +190,6 @@ module Agent
         end
       end
 
-      delete_pop_indexes.each{|i| pop_indexes.delete_at(i) }
-      delete_push_indexes.each{|i| push_indexes.delete_at(i) }
     end
 
   end
