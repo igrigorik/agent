@@ -21,10 +21,11 @@ module Agent
 
     def notify(payload)
       @monitor.synchronize do
-        return @payload if notified?
+        return Agent::Error.new("already notified") if notified?
         @payload  = payload
         @notified = true
         @cvar.signal
+        return nil
       end
     end
   end
