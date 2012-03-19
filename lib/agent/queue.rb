@@ -1,9 +1,11 @@
 module Agent
   class Queue
+    class InvalidQueueSize < Exception; end
+
     attr_reader :name, :max, :queue, :operations, :push_indexes, :pop_indexes, :monitor
 
     def initialize(name, max = 1)
-      raise ArgumentError, "queue size must be at least 0" unless max >= 0
+      raise InvalidQueueSize, "queue size must be at least 0" unless max >= 0
 
       @name = name
       @max  = max
