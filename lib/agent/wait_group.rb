@@ -2,6 +2,8 @@ module Agent
   class WaitGroup
     class NegativeWaitGroupCount < Exception; end
 
+    attr_reader :count
+
     def initialize
       @count   = 0
       @monitor = Monitor.new
@@ -24,8 +26,7 @@ module Agent
 
     def done
       @monitor.synchronize do
-        @count -= 1  if @count > 0
-        @cvar.signal if @count == 0
+        add(-1)
       end
     end
   end
