@@ -15,55 +15,56 @@ This gem is a work in progress, so treat it as such.
  * [Sieve of Eratosthenes](https://github.com/igrigorik/agent/blob/master/spec/examples/sieve_spec.rb)
 
 # Example: Goroutine Generator
-A simple multi-threaded consumer-producer, except without a thread or a mutex in sight! Note that by default Agent channels are unbuffered, meaning that the size is implicitly set to 1. Hence, in example below, the producer will generate a single value, and block until we call receive - rinse, repeat.
+A simple multi-threaded consumer-producer, except without a thread or a mutex in sight! Note that by default Agent channels are unbuffered, meaning that the size is implicitly set to 0. Hence, in example below, the producer will generate a single value, and block until we call receive - rinse, repeat.
 
 ```ruby
-c = Agent::Channel.new(name: 'incr', type: Integer)
+c = channel!(:type => Integer)
 
-go(c) do |c, i=0|
-  loop { c << i+= 1 }
+go! do
+  i = 0
+  loop { c << (i += 1) }
 end
 
-p c.receive # => 1
-p c.receive # => 2
+p c.receive.first # => 1
+p c.receive.first # => 2
 ```
 
 # Example: Multi-channel selector
 A "select" statement chooses which of a set of possible communications will proceed. It looks similar to a "switch" statement but with the cases all referring to communication operations. Select will block until one of the channels becomes available:
 
 ```ruby
-cw = Agent::Channel.new(:name => "select-write", :type => Integer, :size => 1)
-cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
+cw = channel!(:type => Integer, :size => 1)
+cr = channel!(:type => Integer, :size => 1)
 
 select do |s|
-  s.case(cr, :receive) { |c| c.receive }
-  s.case(cw, :send)    { |c| c.send 3  }
+  s.case(cr, :receive) { |value| do_something(value) }
+  s.case(cw, :send, 3)
 end
 ```
 
-In example above, cr is currently unavailable to read from (since its empty), but cw is ready for writing. Hence, select will immediately choose the cw case and execute that code block.
+In example above, cr is currently unavailable to read from (since its empty), but cw is ready for writing since the channel is buffered and empty. Hence, select will immediately choose the cw case and execute that code block.
 
 ```ruby
-cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
+cr = channel!(:type => Integer, :size => 1)
 
 select do |s|
-  s.case(cr, :receive) { |c| c.receive }
+  s.case(cr, :receive) { |value| do_something(value) }
   s.default            { puts :default }
 end
 ```
 
-In this example, cr is unavailable for read (since its empty), but we also provide "default" case which is executed immediately if no other cases are matched. In other words, if no blocking.
+In this example, cr is unavailable for read (since its empty), but we also provide "default" case which is executed immediately if no other cases are matched. In other words, no blocking.
 
 ```ruby
-cr = Agent::Channel.new(:name => "select-read",  :type => Integer, :size => 1)
+cr = channel!(:type => Integer, :size => 1)
 
 select do |s|
-  s.case(cr, :receive) { |c| c.receive }
+  s.case(cr, :receive) { |value| do_something(value) }
   s.timeout(1.0)       { puts :timeout }
 end
 ```
 
-Once again, cr is empty, hence cannot be read from and since there is no default block, select will block until cr is readable, or until the timeout condition is met - which in the case above is set to 1 second.
+Once again, cr is empty, hence cannot be read from and there is no default block. Select will block until cr is readable or until the timeout condition is met - which in the case above is set to 1 second.
 
 # Go & π-calculus: Background & Motivation
 
