@@ -3,13 +3,14 @@ module Agent
     class Rollback < StandardError; end
 
     def perform
-      @monitor.synchronize do
+      @mutex.synchronize do
         # Hold this mutex for the minimum amount of time possible, since mutexes are slow
         return nil, error if @performed
 
         begin
-          return yield, nil
+          value = yield
           @performed = true
+          return value, nil
         rescue Rollback
           return nil, error
         end

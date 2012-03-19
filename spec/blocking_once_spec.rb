@@ -77,7 +77,7 @@ describe Agent::BlockingOnce do
 
     finished_channel.close
 
-    (Time.now.to_f - s).should be_within(0.01).of(0.2)
+    (Time.now.to_f - s).should be_within(0.05).of(0.2)
   end
 
   it "should have minimal contention between threads when they contend for position" do

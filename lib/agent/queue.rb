@@ -134,47 +134,67 @@ module Agent
     end
 
     def process_sync
-      if operations[0].is_a?(Push)
-        until pop_indexes.empty?
-          error = operations[0].receive do |value|
-            error = operations[pop_indexes[0]].send do
+      operation = operations.last
+
+      delete_push_indexes = []
+      delete_pop_indexes = []
+
+      if operation.is_a?(Push)
+        pop_indexes.each_with_index do |pop_index, i|
+          pop_operation = operations[pop_index]
+
+          if operation.blocking_once && operation.blocking_once == pop_operation.blocking_once
+            next
+          end
+
+          error = operation.receive do |value|
+            error = pop_operation.send do
               value
             end
 
-            operations.delete_at(pop_indexes[0])
-            pop_indexes.shift
+            operations.delete_at(pop_index)
+            delete_pop_indexes << i
             raise Push::Rollback if error
           end
 
           if error.nil? || error.message?("already performed")
-            operations.shift
-            push_indexes.shift
+            operations.pop
+            push_indexes.pop
             break
           end
         end
       else # Pop
-        until push_indexes.empty?
-          error = operations[0].send do
+        push_indexes.each_with_index do |push_index, i|
+          push_operation = operations[push_index]
+
+          if operation.blocking_once && operation.blocking_once == push_operation.blocking_once
+            next
+          end
+
+          error = operation.send do
             value = nil
 
-            error = operations[push_indexes[0]].receive do |v|
+            error = push_operation.receive do |v|
               value = v
             end
 
-            operations.delete_at(push_indexes[0])
-            push_indexes.shift
+            operations.delete_at(push_index)
+            delete_push_indexes << i
             raise Pop::Rollback if error
 
             value
           end
 
           if error.nil? || error.message?("already performed")
-            operations.shift
-            pop_indexes.shift
+            operations.pop
+            pop_indexes.pop
             break
           end
         end
       end
+
+      delete_pop_indexes.each{|i| pop_indexes.delete_at(i) }
+      delete_push_indexes.each{|i| push_indexes.delete_at(i) }
     end
 
   end

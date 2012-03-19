@@ -166,8 +166,9 @@ describe Agent::Selector do
 
       it "should select first available channel" do
         # create a write channel and a read channel
-        cw = channel!(:type => Integer)
-        cr = channel!(:type => Integer)
+        cw  = channel!(:type => Integer)
+        cr  = channel!(:type => Integer)
+        ack = channel!(:type => TrueClass)
 
         res = []
 
@@ -176,14 +177,16 @@ describe Agent::Selector do
         # read channel: wait for 0.3s before pushing a message into it
         go!{ sleep(0.3); cr.send 2 }
         # write channel: wait for 0.1s before consuming the message
-        go!{ sleep(0.1); res.push cw.receive[0] }
+        go!{ sleep(0.1); res.push cw.receive[0]; ack.send(true) }
 
         # wait until one of the channels become available
         # cw should fire first and push '3'
         select! do |s|
           s.case(cr, :receive) {|value| res.push value }
-          s.case(cw, :send, 3) {}
+          s.case(cw, :send, 3)
         end
+
+        ack.receive
 
         res.size.should == 1
         res.first.should == 3
