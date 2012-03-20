@@ -358,8 +358,9 @@ describe Agent::Selector do
 
       it "should select first available channel" do
         # create a "full" write channel, and "empty" read channel
-        cw = channel!(:type => Integer, :size => 1)
-        cr = channel!(:type => Integer, :size => 1)
+        cw  = channel!(:type => Integer, :size => 1)
+        cr  = channel!(:type => Integer, :size => 1)
+        ack = channel!(:type => TrueClass)
 
         cw.send(1)
 
@@ -369,7 +370,7 @@ describe Agent::Selector do
         # empty read channel: wait for 0.5s before pushing a message into it
         go!{ sleep(0.5); cr.send(2) }
         # full write channel: wait for 0.2s before consuming the message
-        go!{ sleep(0.2); res.push cw.receive[0] }
+        go!{ sleep(0.2); res.push cw.receive[0]; ack.send(true) }
 
         # wait until one of the channels become available
         # cw should fire first and push '3'
@@ -377,6 +378,8 @@ describe Agent::Selector do
           s.case(cr, :receive) {|value| res.push value }
           s.case(cw, :send, 3)
         end
+
+        ack.receive
 
         # 0.8s goroutine should have consumed the message first
         res.size.should == 1
