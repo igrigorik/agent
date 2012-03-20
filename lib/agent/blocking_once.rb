@@ -12,10 +12,12 @@ module Agent
           @performed = true
           return value, nil
         rescue Rollback
-          return nil, error
+          return nil, rollback_error
         end
       end
     end
+
+  protected
 
     def rollback_error
       @rollback_error ||= Agent::Error.new("rolled back")
