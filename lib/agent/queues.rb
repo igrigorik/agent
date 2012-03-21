@@ -9,7 +9,18 @@ module Agent
     self.queues = {}
 
     def self.register(name, max)
-      LOCK.synchronize{ queues[name] ||= Agent::Queue.new(name, max) }
+      LOCK.synchronize do
+        queue = queues[name]
+        return queue if queue
+
+        raise InvalidQueueSize, "queue size must be at least 0" unless max >= 0
+
+        if max > 0
+          queues[name] = Agent::Queue::Buffered.new(max)
+        else
+          queues[name] = Agent::Queue::Unbuffered.new
+        end
+      end
     end
 
     def self.delete(name)

@@ -130,7 +130,7 @@ describe Agent::Channel do
 
   context "buffering" do
     # The capacity, in number of elements, sets the size of the buffer in the channel.
-    # If the capacity is greater than zero, the channel is asynchronous: provided the
+    # If the capacity is greater than zero, the channel is buffered: provided the
     # buffer is not full, sends can succeed without blocking. If the capacity is zero
     # or absent, the communication succeeds only when both a sender and receiver are ready.
 
