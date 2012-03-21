@@ -20,6 +20,19 @@ describe Agent::Queue do
       lambda{ Agent::Queue::Buffered.new(-1) }.should raise_error(Agent::Queue::Buffered::InvalidQueueSize)
     end
 
+    it "should enqueue and dequeue in order" do
+      20.times{|i| @queue.push(Agent::Push.new(i)) }
+
+      previous = -1
+
+      20.times do |i|
+        pop = Agent::Pop.new
+        @queue.pop(pop)
+        pop.object.should > previous
+        previos = pop.object
+      end
+    end
+
     context "when the queue is empty" do
       it "should hold any attempts to pop from it" do
         @queue.operations.should be_empty
@@ -197,6 +210,19 @@ describe Agent::Queue do
 
     it "should be unbuffered" do
       @queue.should be_unbuffered
+    end
+
+    it "should enqueue and dequeue in order" do
+      20.times{|i| @queue.push(Agent::Push.new(i)) }
+
+      previous = -1
+
+      20.times do |i|
+        pop = Agent::Pop.new
+        @queue.pop(pop)
+        pop.object.should > previous
+        previos = pop.object
+      end
     end
 
     context "when there are no operations waiting" do
