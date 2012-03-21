@@ -59,26 +59,8 @@ module Agent
             end
           end
 
-          case operations[0]
-          when Push
-            if push?
-              operation = operations[0]
-            elsif pop? && operation = pops[0]
-              next
-            else
-              break
-            end
-          when Pop
-            if pop?
-              operation = operations[0]
-            elsif push? && operation = pushes[0]
-              next
-            else
-              break
-            end
-          else
-            break
-          end
+          operation = operations[0]
+          break unless operation
         end
       end
 
