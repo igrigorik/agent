@@ -36,7 +36,6 @@ module Agent
 
     def default(&blk)
       if @default_case
-        @default_case.channel.close
         raise DefaultCaseAlreadyDefinedError
       else
         @default_case = self.case(channel!(:type => TrueClass, :size => 1), :receive, &blk)
