@@ -23,10 +23,6 @@ module Agent
       @closed
     end
 
-    def runnable?
-      !@blocking_once || !@blocking_once.performed?
-    end
-
     def wait
       @mutex.synchronize do
         until sent? || closed?

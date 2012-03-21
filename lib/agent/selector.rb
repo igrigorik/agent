@@ -14,7 +14,7 @@ module Agent
   ensure
     if selector
       selector.close_default_channel
-      selector.dequeue_unrunnable_operations
+      selector.dequeue_operations
     end
   end
 
@@ -82,7 +82,7 @@ module Agent
       end
     end
 
-    def dequeue_unrunnable_operations
+    def dequeue_operations
       @operations.each do |channel, operations|
         channel.remove_operations(operations)
       end
