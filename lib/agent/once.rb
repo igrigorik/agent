@@ -1,7 +1,7 @@
 module Agent
   class Once
     def initialize
-      @mutex     = Monitor.new
+      @mutex     = Mutex.new
       @performed = false
     end
 
