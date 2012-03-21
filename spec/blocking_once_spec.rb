@@ -85,20 +85,20 @@ describe Agent::BlockingOnce do
     r, s = [], Time.now.to_f
 
     # Using condition variables to maximize potential contention
-    monitor   = Monitor.new
-    condition = monitor.new_cond
+    mutex     = Mutex.new
+    condition = ConditionVariable.new
 
     waiting_channel  = channel!(:type => TrueClass, :size => 2)
     finished_channel = channel!(:type => TrueClass, :size => 2)
 
     go! do
-      monitor.synchronize{ waiting_channel.send(true); condition.wait }
+      mutex.synchronize{ waiting_channel.send(true); condition.wait(mutex) }
       @blocking_once.perform{ sleep 0.1; r << 1 }
       finished_channel.send(true)
     end
 
     go! do
-      monitor.synchronize{ waiting_channel.send(true); condition.wait }
+      mutex.synchronize{ waiting_channel.send(true); condition.wait(mutex) }
       @blocking_once.perform{ sleep 0.1; r << 1 }
       finished_channel.send(true)
     end
@@ -106,7 +106,7 @@ describe Agent::BlockingOnce do
     # wait for both the goroutines to be waiting
     2.times{ waiting_channel.receive }
 
-    monitor.synchronize{ condition.broadcast }
+    mutex.synchronize{ condition.broadcast }
 
     # wait for the finished channel to be completed
     2.times{ finished_channel.receive }

@@ -1,5 +1,4 @@
 require "thread"
-require "monitor"
 
 require "agent/version"
 require "agent/errors"
