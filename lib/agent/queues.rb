@@ -1,6 +1,6 @@
 module Agent
   module Queues
-    LOCK = Monitor.new
+    LOCK = Mutex.new
 
     class << self
       attr_accessor :queues
