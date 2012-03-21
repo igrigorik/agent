@@ -3,8 +3,8 @@ module Agent
     attr_reader :payload
 
     def initialize
-      @monitor  = Monitor.new
-      @cvar     = @monitor.new_cond
+      @mutex    = Mutex.new
+      @cvar     = ConditionVariable.new
       @notified = false
       @payload  = nil
     end
@@ -14,13 +14,15 @@ module Agent
     end
 
     def wait
-      @monitor.synchronize do
-        @cvar.wait_until { notified? }
+      @mutex.synchronize do
+        until notified?
+          @cvar.wait(@mutex)
+        end
       end
     end
 
     def notify(payload)
-      @monitor.synchronize do
+      @mutex.synchronize do
         return Agent::Error.new("already notified") if notified?
         @payload  = payload
         @notified = true
