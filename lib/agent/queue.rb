@@ -2,7 +2,7 @@ module Agent
   class Queue
     class InvalidQueueSize < Exception; end
 
-    attr_reader :name, :max, :queue, :operations, :push_indexes, :pop_indexes, :monitor
+    attr_reader :name, :max, :queue, :operations, :push_indexes, :pop_indexes, :mutex
 
     def initialize(name, max = 1)
       raise InvalidQueueSize, "queue size must be at least 0" unless max >= 0
@@ -17,11 +17,11 @@ module Agent
       @operations   = []
       @push_indexes = []
       @pop_indexes  = []
-      @monitor      = Monitor.new
+      @mutex        = Mutex.new
     end
 
     def close
-      monitor.synchronize do
+      mutex.synchronize do
         @state = :closed
         operations.each{|o| o.close }
       end
@@ -33,7 +33,7 @@ module Agent
     def length; queue.size; end
 
     def push(p)
-      monitor.synchronize do
+      mutex.synchronize do
         raise ChannelClosed if closed?
         operations << p
         push_indexes << (operations.size - 1)
@@ -43,7 +43,7 @@ module Agent
     def push?; max > size; end
 
     def pop(p)
-      monitor.synchronize do
+      mutex.synchronize do
         raise ChannelClosed if closed?
         operations << p
         pop_indexes << (operations.size - 1)
@@ -55,7 +55,7 @@ module Agent
     def async?; @max > 0; end
 
     def remove_operations(ops)
-      monitor.synchronize do
+      mutex.synchronize do
         return if closed?
 
         ops.each_with_index do |operation, index|
