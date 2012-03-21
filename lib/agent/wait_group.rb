@@ -6,28 +6,38 @@ module Agent
 
     def initialize
       @count   = 0
-      @monitor = Monitor.new
-      @cvar    = @monitor.new_cond
+      @mutex   = Mutex.new
+      @cvar    = ConditionVariable.new
     end
 
     def wait
-      @monitor.synchronize do
-        @cvar.wait_while{ @count > 0 }
+      @mutex.synchronize do
+        while @count > 0
+          @cvar.wait(@mutex)
+        end
       end
     end
 
     def add(delta)
-      @monitor.synchronize do
-        @count += delta
-        raise NegativeWaitGroupCount if @count < 0
-        @cvar.signal if @count == 0
+      @mutex.synchronize do
+        modify_count(delta)
       end
     end
 
     def done
-      @monitor.synchronize do
-        add(-1)
+      @mutex.synchronize do
+        modify_count(-1)
       end
     end
+
+  protected
+
+    # Expects to be called inside of the mutex
+    def modify_count(delta)
+      @count += delta
+      raise NegativeWaitGroupCount if @count < 0
+      @cvar.signal if @count == 0
+    end
+
   end
 end
