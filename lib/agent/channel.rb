@@ -44,7 +44,7 @@ module Agent
 
     def marshal_load(ary)
       @state, @name, @max, @type, @direction = *ary
-      @queue = Queues.queues[@name]
+      @queue = Queues[@name]
       @state = :closed unless @queue
       self
     end
@@ -101,7 +101,7 @@ module Agent
         @state = :closed
         @queue.close
         @queue = nil
-        Queues.remove(@name)
+        Queues.delete(@name)
       end
     end
     def closed?; @state == :closed; end

@@ -9,12 +9,19 @@ module Agent
     self.queues = {}
 
     def self.register(name, max)
-      return queues[name] if queues.has_key?(name)
       LOCK.synchronize{ queues[name] ||= Agent::Queue.new(name, max) }
     end
 
-    def self.remove(name)
+    def self.delete(name)
       LOCK.synchronize{ queues.delete(name) }
+    end
+
+    def self.[](name)
+      LOCK.synchronize{ queues[name] }
+    end
+
+    def self.clear
+      LOCK.synchronize{ queues.clear }
     end
   end
 end
