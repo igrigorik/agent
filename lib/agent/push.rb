@@ -9,8 +9,8 @@ module Agent
       @uuid          = options[:uuid] || Agent::UUID.generate
       @blocking_once = options[:blocking_once]
       @notifier      = options[:notifier]
-      @monitor       = Monitor.new
-      @cvar          = @monitor.new_cond
+      @mutex         = Mutex.new
+      @cvar          = ConditionVariable.new
       @sent          = false
       @closed        = false
     end
@@ -28,14 +28,16 @@ module Agent
     end
 
     def wait
-      @monitor.synchronize do
-        @cvar.wait_until { sent? || closed? }
+      @mutex.synchronize do
+        until sent? || closed?
+          @cvar.wait(@mutex)
+        end
         raise ChannelClosed if closed?
       end
     end
 
     def receive
-      @monitor.synchronize do
+      @mutex.synchronize do
         raise ChannelClosed if @closed
 
         if @blocking_once
@@ -43,7 +45,7 @@ module Agent
             begin
               yield @object
               @sent = true
-              @monitor.synchronize{ @cvar.signal }
+              @cvar.signal
               @notifier.notify(self) if @notifier
             rescue Rollback
               raise BlockingOnce::Rollback
@@ -55,7 +57,7 @@ module Agent
           begin
             yield @object
             @sent = true
-            @monitor.synchronize{ @cvar.signal }
+            @cvar.signal
             @notifier.notify(self) if @notifier
           rescue Rollback
           end
@@ -64,7 +66,7 @@ module Agent
     end
 
     def close
-      @monitor.synchronize do
+      @mutex.synchronize do
         return if @sent
         @closed = true
         @cvar.broadcast
