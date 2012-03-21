@@ -40,6 +40,12 @@ describe Agent::Pop do
 
       (Time.now - s).should be_within(0.01).of(0)
     end
+
+    it "be able to be gracefully rolled back" do
+      @pop.should_not be_received
+      @pop.send{ raise Agent::Pop::Rollback }
+      @pop.should_not be_received
+    end
   end
 
   context "with a blocking_once" do
@@ -58,6 +64,14 @@ describe Agent::Pop do
       @pop.object.should == 1
 
       lambda{@pop.send{raise "an error"} }.should_not raise_error
+    end
+
+    it "be able to be gracefully rolled back" do
+      @blocking_once.should_not be_performed
+      @pop.should_not be_received
+      @pop.send{ raise Agent::Pop::Rollback }
+      @blocking_once.should_not be_performed
+      @pop.should_not be_received
     end
   end
 

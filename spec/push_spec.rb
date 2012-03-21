@@ -36,6 +36,12 @@ describe Agent::Push do
       go!{ sleep 0.1; @push.close }
       lambda{ @push.wait }.should raise_error(Agent::ChannelClosed)
     end
+
+    it "be able to be gracefully rolled back" do
+      @push.should_not be_sent
+      @push.receive{|v| raise Agent::Push::Rollback }
+      @push.should_not be_sent
+    end
   end
 
   context "with a blocking_once" do
@@ -56,6 +62,14 @@ describe Agent::Push do
       i.should == 1
 
       lambda{@push.receive{raise "an error"} }.should_not raise_error
+    end
+
+    it "be able to be gracefully rolled back" do
+      @blocking_once.should_not be_performed
+      @push.should_not be_sent
+      @push.receive{|v| raise Agent::Push::Rollback }
+      @blocking_once.should_not be_performed
+      @push.should_not be_sent
     end
   end
 
