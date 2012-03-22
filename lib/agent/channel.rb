@@ -10,7 +10,7 @@ module Agent
   end
 
   class Channel
-    attr_reader :name, :chan
+    attr_reader :name, :chan, :direction
 
     class InvalidDirection < Exception; end
     class Untyped < Exception; end
@@ -113,8 +113,23 @@ module Agent
       q.remove_operations(operations) if q
     end
 
+    def as_send_only
+      as_direction_only(:send)
+    end
+
+    def as_receive_only
+      as_direction_only(:receive)
+    end
+
 
   private
+
+    def as_direction_only(direction)
+      @close_mutex.synchronize do
+        raise ChannelClosed if @closed
+        channel!(@type, @max, :name => @name, :direction => direction)
+      end
+    end
 
     def check_type(object)
       raise InvalidType unless object.is_a?(@type)

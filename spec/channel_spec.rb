@@ -28,6 +28,8 @@ describe Agent::Channel do
       lambda { c.push "hello" }.should_not raise_error
       lambda { c.send "hello" }.should_not raise_error
 
+      c.direction.should == :send
+
       lambda { c.pop }.should raise_error Agent::Channel::InvalidDirection
       lambda { c.receive }.should raise_error Agent::Channel::InvalidDirection
 
@@ -40,6 +42,8 @@ describe Agent::Channel do
       lambda { c << "hello"   }.should raise_error Agent::Channel::InvalidDirection
       lambda { c.push "hello" }.should raise_error Agent::Channel::InvalidDirection
       lambda { c.send "hello" }.should raise_error Agent::Channel::InvalidDirection
+
+      c.direction.should == :receive
 
       # timeout blocking receive calls
       timed_out = false
@@ -55,6 +59,21 @@ describe Agent::Channel do
       c = channel!(String, 1)
       lambda { c.send "hello" }.should_not raise_error
       lambda { c.receive }.should_not raise_error
+
+      c.direction.should == :bidirectional
+    end
+
+    it "should be able to be dup'd as a uni-directional channel" do
+      c = channel!(String, 1)
+
+      send_only = c.as_send_only
+      send_only.direction.should == :send
+
+      receive_only = c.as_receive_only
+      receive_only.direction.should == :receive
+
+      send_only.send("nifty")
+      receive_only.receive[0].should == "nifty"
     end
   end
 
