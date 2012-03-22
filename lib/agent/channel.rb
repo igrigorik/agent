@@ -22,7 +22,7 @@ module Agent
       # Module includes both classes and modules
       raise InvalidType unless opts[:type].is_a?(Module)
 
-      @state      = :open
+      @closed     = false
       @name       = opts[:name] || Agent::UUID.generate
       @max        = opts[:size] || 0
       @type       = opts[:type]
@@ -43,14 +43,14 @@ module Agent
     # Serialization methods
 
     def marshal_load(ary)
-      @state, @name, @max, @type, @direction = *ary
+      @closed, @name, @max, @type, @direction = *ary
       @queue = Queues[@name]
-      @state = :closed unless @queue
+      @closed = @queue.nil?
       self
     end
 
     def marshal_dump
-      [@state, @name, @max, @type, @direction]
+      [@closed, @name, @max, @type, @direction]
     end
 
 
@@ -97,15 +97,15 @@ module Agent
 
     def close
       @close_mutex.synchronize do
-        raise ChannelClosed if @state == :closed
-        @state = :closed
+        raise ChannelClosed if @closed
+        @closed = true
         @queue.close
         @queue = nil
         Queues.delete(@name)
       end
     end
-    def closed?; @state == :closed; end
-    def open?;   @state == :open;   end
+    def closed?; @closed; end
+    def open?;   !@closed;   end
 
     def remove_operations(operations)
       # ugly, but it overcomes the race condition without synchronization

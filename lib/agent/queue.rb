@@ -8,7 +8,7 @@ module Agent
     attr_reader :queue, :operations, :pushes, :pops, :mutex
 
     def initialize
-      @state = :open
+      @closed = false
 
       @queue = []
 
@@ -42,8 +42,8 @@ module Agent
 
     def close
       mutex.synchronize do
-        raise ChannelClosed if closed?
-        @state = :closed
+        raise ChannelClosed if @closed
+        @closed = true
         @operations.each{|o| o.close }
         @operations.clear
         @queue.clear
@@ -54,12 +54,12 @@ module Agent
       end
     end
 
-    def closed?; @state == :closed; end
-    def open?;   @state == :open;   end
+    def closed?; @closed; end
+    def open?;   !@closed;   end
 
     def push(p)
       mutex.synchronize do
-        raise ChannelClosed if closed?
+        raise ChannelClosed if @closed
         operations << p
         pushes << p
         process
@@ -68,7 +68,7 @@ module Agent
 
     def pop(p)
       mutex.synchronize do
-        raise ChannelClosed if closed?
+        raise ChannelClosed if @closed
         operations << p
         pops << p
         process
@@ -77,7 +77,7 @@ module Agent
 
     def remove_operations(ops)
       mutex.synchronize do
-        return if closed?
+        return if @closed
 
         ops.each do |operation|
           operations.delete(operation)

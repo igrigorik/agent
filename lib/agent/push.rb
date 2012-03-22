@@ -25,10 +25,10 @@ module Agent
 
     def wait
       @mutex.synchronize do
-        until sent? || closed?
+        until @sent || @closed
           @cvar.wait(@mutex)
         end
-        raise ChannelClosed if closed?
+        raise ChannelClosed if @closed
       end
     end
 

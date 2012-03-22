@@ -25,7 +25,7 @@ module Agent
 
     def wait
       @mutex.synchronize do
-        until received? || closed?
+        until @received || @closed
           @cvar.wait(@mutex)
         end
         return received?
