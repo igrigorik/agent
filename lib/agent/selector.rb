@@ -38,12 +38,12 @@ module Agent
       if @default_case
         raise DefaultCaseAlreadyDefinedError
       else
-        @default_case = self.case(channel!(:type => TrueClass, :size => 1), :receive, &blk)
+        @default_case = self.case(channel!(TrueClass, 1), :receive, &blk)
       end
     end
 
     def timeout(t, &blk)
-      s = channel!(:type => TrueClass, :size => 1)
+      s = channel!(TrueClass, 1)
       go!{ sleep t; s.send(true); s.close }
       add_case(s, :timeout, &blk)
     end

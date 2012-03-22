@@ -5,8 +5,8 @@ require "agent/queues"
 require "agent/errors"
 
 module Agent
-  def self.channel!(options)
-    Agent::Channel.new(options)
+  def self.channel!(*args)
+    Agent::Channel.new(*args)
   end
 
   class Channel
@@ -16,21 +16,20 @@ module Agent
     class Untyped < Exception; end
     class InvalidType < Exception; end
 
-    def initialize(opts = {})
-      raise Untyped unless opts[:type]
+    def initialize(*args)
+      opts = args.last.is_a?(Hash) ? args.pop : {}
 
+      @type = args.shift
+      raise Untyped unless @type
       # Module includes both classes and modules
-      raise InvalidType unless opts[:type].is_a?(Module)
+      raise InvalidType unless @type.is_a?(Module)
 
-      @closed     = false
-      @name       = opts[:name] || Agent::UUID.generate
-      @max        = opts[:size] || 0
-      @type       = opts[:type]
-      @direction  = opts[:direction] || :bidirectional
-
+      @max         = args.shift  || 0
+      @closed      = false
+      @name        = opts[:name] || Agent::UUID.generate
+      @direction   = opts[:direction] || :bidirectional
       @close_mutex = Mutex.new
-
-      @queue = Queues.register(@name, @max)
+      @queue       = Queues.register(@name, @max)
     end
 
     def queue

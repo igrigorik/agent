@@ -5,7 +5,7 @@ describe Agent::Pop do
   context "in its basic operation" do
     before do
       @pop = Agent::Pop.new
-      @ack = channel!(:type => Time)
+      @ack = channel!(Time)
     end
 
     it "should close" do

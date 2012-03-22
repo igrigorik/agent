@@ -58,8 +58,8 @@ describe "Producer-Consumer" do
       s << "consumer finished"
     end
 
-    c = channel!(:type => Integer)
-    s = channel!(:type => String)
+    c = channel!(Integer)
+    s = channel!(String)
 
     go!(c, 3, s, &producer)
     sleep 0.1
@@ -80,7 +80,7 @@ describe "Producer-Consumer" do
     end
 
     Generator = Struct.new(:name, :pipe)
-    c = channel!(:type => Integer)
+    c = channel!(Integer)
     g = Generator.new(:incr, c)
 
     go!(g, &producer)

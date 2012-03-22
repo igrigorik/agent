@@ -32,7 +32,7 @@ describe Agent::Notifier do
   end
 
   it "should allow waiting on a notification and should signal when it is notified" do
-    ack = channel!(:type => Integer)
+    ack = channel!(Integer)
     go!{ @notifier.wait; ack.send(@notifier.payload) }
     sleep 0.1 # make sure the notifier in the goroutine is waiting
     @notifier.notify(1)

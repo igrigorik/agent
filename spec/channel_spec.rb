@@ -5,12 +5,12 @@ describe Agent::Channel do
   context "naming" do
     it "should not be required" do
       c = nil
-      lambda { c = channel!(:type => String) }.should_not raise_error
+      lambda { c = channel!(String) }.should_not raise_error
       c.close
     end
 
     it "be able to be set" do
-      c = channel!(:type => String, :name => "gibberish")
+      c = channel!(String, :name => "gibberish")
       c.name.should == "gibberish"
       c.close
     end
@@ -22,7 +22,7 @@ describe Agent::Channel do
     # type. The value of an uninitialized channel is nil.
 
     it "should support send only" do
-      c = channel!(:direction => :send, :type => String, :size => 3)
+      c = channel!(String, 3, :direction => :send)
 
       lambda { c << "hello"   }.should_not raise_error
       lambda { c.push "hello" }.should_not raise_error
@@ -35,7 +35,7 @@ describe Agent::Channel do
     end
 
     it "should support receive only" do
-      c = channel!(:direction => :receive, :type => String)
+      c = channel!(String, :direction => :receive)
 
       lambda { c << "hello"   }.should raise_error Agent::Channel::InvalidDirection
       lambda { c.push "hello" }.should raise_error Agent::Channel::InvalidDirection
@@ -52,7 +52,7 @@ describe Agent::Channel do
     end
 
     it "should default to bi-directional communication" do
-      c = channel!(:type => String, :size => 1)
+      c = channel!(String, 1)
       lambda { c.send "hello" }.should_not raise_error
       lambda { c.receive }.should_not raise_error
     end
@@ -60,7 +60,7 @@ describe Agent::Channel do
 
   context "closing" do
     before do
-      @c = channel!(:type => String)
+      @c = channel!(String)
     end
 
     it "not raise an error the first time it is called" do
@@ -98,7 +98,7 @@ describe Agent::Channel do
 
   context "deadlock" do
     before do
-      @c = channel!(:type => String)
+      @c = channel!(String)
     end
 
     it "should deadlock on single thread", :vm => :ruby do
@@ -113,14 +113,14 @@ describe Agent::Channel do
 
   context "typed" do
     it "should create a typed channel" do
-      lambda { channel!({}) }.should raise_error Agent::Channel::Untyped
+      lambda { channel! }.should raise_error Agent::Channel::Untyped
       c = nil
-      lambda { c = channel!(:type => Integer) }.should_not raise_error
+      lambda { c = channel!(Integer) }.should_not raise_error
       c.close
     end
 
     it "should reject messages of invalid type" do
-      c = channel!(:type => String)
+      c = channel!(String)
       go!{ c.receive }
       lambda { c.send 1 }.should raise_error(Agent::Channel::InvalidType)
       lambda { c.send "hello" }.should_not raise_error
@@ -136,7 +136,7 @@ describe Agent::Channel do
 
     it "should default to unbuffered" do
       n = Time.now
-      c = channel!(:type => String)
+      c = channel!(String)
 
       go!{ sleep(0.15); c.send("hello") }
       c.receive[0].should == "hello"
@@ -145,7 +145,7 @@ describe Agent::Channel do
     end
 
     it "should support buffered" do
-      c = channel!(:type => String, :size => 2)
+      c = channel!(String, 2)
       r = []
 
       c.send "hello 1"
@@ -169,7 +169,7 @@ describe Agent::Channel do
 
   context "channels of channels" do
     before do
-      @c = channel!(:type => String, :size => 1)
+      @c = channel!(String, 1)
     end
 
     after do

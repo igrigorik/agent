@@ -8,7 +8,7 @@ require 'agent'
 # second.
 
 Request = Struct.new(:args, :resultChan)
-clientRequests = channel!(:type => Request, :size => 2)
+clientRequests = channel!(Request, 2)
 
 # Now, we create a new worker block, which takes in a “reqs” object, calls receive on it
 # (hint, req’s is a Channel!), sleeps for a bit, and then sends back a timestamped
@@ -31,8 +31,8 @@ go!(clientRequests, &worker)
 # channel, and pass them to our clientRequests pipe, on which our workers are waiting.
 # Once dispatched, we simply call receive and wait for the results!
 
-req1 = Request.new(1, channel!(:type => String))
-req2 = Request.new(2, channel!(:type => String))
+req1 = Request.new(1, channel!(String))
+req2 = Request.new(2, channel!(String))
 
 clientRequests << req1
 clientRequests << req2

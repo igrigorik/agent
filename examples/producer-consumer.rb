@@ -2,7 +2,7 @@ project_lib_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib
 $LOAD_PATH.unshift(project_lib_path)
 require 'agent'
 
-c = channel!(:type => Integer)
+c = channel!(Integer)
 
 go!(c) do |c|
   i = 0

@@ -29,7 +29,7 @@ describe Agent::Selector do
 
   context "with unbuffered channels" do
     before do
-      @c = channel!(:type => Integer)
+      @c = channel!(Integer)
     end
 
     after do
@@ -105,7 +105,7 @@ describe Agent::Selector do
 
     context "select immediately available channel" do
       it "should select read channel" do
-        c = channel!(:type => Integer)
+        c = channel!(Integer)
         go!{ c.send(1) }
 
         sleep 0.01 # make sure the goroutine executes, brittle
@@ -123,7 +123,7 @@ describe Agent::Selector do
       end
 
       it "should select write channel" do
-        c = channel!(:type => Integer)
+        c = channel!(Integer)
 
         go!{ c.receive }
 
@@ -144,7 +144,7 @@ describe Agent::Selector do
 
     context "select busy channel" do
       it "should select busy read channel" do
-        c = channel!(:type => Integer)
+        c = channel!(Integer)
         r = []
 
         # brittle.. counting on select to execute within 0.5s
@@ -161,7 +161,7 @@ describe Agent::Selector do
       end
 
       it "should select busy write channel" do
-        c = channel!(:type => Integer)
+        c = channel!(Integer)
 
         # brittle.. counting on select to execute within 0.5s
         now = Time.now.to_f
@@ -177,9 +177,9 @@ describe Agent::Selector do
 
       it "should select first available channel" do
         # create a write channel and a read channel
-        cw  = channel!(:type => Integer)
-        cr  = channel!(:type => Integer)
-        ack = channel!(:type => TrueClass)
+        cw  = channel!(Integer)
+        cr  = channel!(Integer)
+        ack = channel!(TrueClass)
 
         res = []
 
@@ -214,7 +214,7 @@ describe Agent::Selector do
 
   context "with buffered channels" do
     before do
-      @c = channel!(:type => Integer, :size => 1)
+      @c = channel!(Integer, 1)
     end
 
     after do
@@ -290,7 +290,7 @@ describe Agent::Selector do
 
     context "select immediately available channel" do
       it "should select read channel" do
-        c = channel!(:type => Integer, :size => 1)
+        c = channel!(Integer, 1)
         c.send(1)
 
         r = []
@@ -306,7 +306,7 @@ describe Agent::Selector do
       end
 
       it "should select write channel" do
-        c = channel!(:type => Integer, :size => 1)
+        c = channel!(Integer, 1)
 
         r = []
         select! do |s|
@@ -323,7 +323,7 @@ describe Agent::Selector do
 
     context "select busy channel" do
       it "should select busy read channel" do
-        c = channel!(:type => Integer, :size => 1)
+        c = channel!(Integer, 1)
         r = []
 
         # brittle.. counting on select to execute within 0.5s
@@ -340,7 +340,7 @@ describe Agent::Selector do
       end
 
       it "should select busy write channel" do
-        c = channel!(:type => Integer, :size => 1)
+        c = channel!(Integer, 1)
         c.send 1
 
         # brittle.. counting on select to execute within 0.5s
@@ -358,9 +358,9 @@ describe Agent::Selector do
 
       it "should select first available channel" do
         # create a "full" write channel, and "empty" read channel
-        cw  = channel!(:type => Integer, :size => 1)
-        cr  = channel!(:type => Integer, :size => 1)
-        ack = channel!(:type => TrueClass)
+        cw  = channel!(Integer, 1)
+        cr  = channel!(Integer, 1)
+        ack = channel!(TrueClass)
 
         cw.send(1)
 

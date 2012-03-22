@@ -8,7 +8,7 @@ describe "sieve of Eratosthenes" do
 
     # send the sequence 2,3,4, ... to returned channel
     def generate(channels)
-      ch = channel!(:type => Integer)
+      ch = channel!(Integer)
       channels << ch
       go!{ i = 1; loop { ch << i+= 1} }
 
@@ -17,7 +17,7 @@ describe "sieve of Eratosthenes" do
 
     # filter out input values divisible by *prime*, send rest to returned channel
     def filter(in_channel, prime, channels)
-      out = channel!(:type => Integer)
+      out = channel!(Integer)
       channels << out
 
       go! do
@@ -31,7 +31,7 @@ describe "sieve of Eratosthenes" do
     end
 
     def sieve(channels)
-      out = channel!(:type => Integer)
+      out = channel!(Integer)
       channels << out
 
       go! do
@@ -77,7 +77,7 @@ describe "sieve of Eratosthenes" do
 
     # send the sequence 2,3,4, ... to returned channel
     generate = Proc.new do |channels|
-      ch = channel!(:type => Integer)
+      ch = channel!(Integer)
       channels << ch
 
       go! do
@@ -90,7 +90,7 @@ describe "sieve of Eratosthenes" do
 
     # filter out input values divisible by *prime*, send rest to returned channel
     filtr = Proc.new do |in_channel, prime, channels|
-      out = channel!(:type => Integer)
+      out = channel!(Integer)
       channels << out
 
       go! do
@@ -104,7 +104,7 @@ describe "sieve of Eratosthenes" do
     end
 
     sieve = Proc.new do |channels|
-      out = channel!(:type => Integer)
+      out = channel!(Integer)
       channels << out
 
       go! do

@@ -5,7 +5,7 @@ describe Agent::Push do
   context "in its basic operation" do
     before do
       @push = Agent::Push.new("1")
-      @ack = channel!(:type => Time)
+      @ack = channel!(Time)
     end
 
     it "should close" do

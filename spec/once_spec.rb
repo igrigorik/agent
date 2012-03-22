@@ -58,8 +58,8 @@ describe Agent::Once do
     mutex     = Mutex.new
     condition = ConditionVariable.new
 
-    waiting_channel  = channel!(:type => TrueClass, :size => 2)
-    finished_channel = channel!(:type => TrueClass, :size => 2)
+    waiting_channel  = channel!(TrueClass, 2)
+    finished_channel = channel!(TrueClass, 2)
 
     go! do
       mutex.synchronize{ waiting_channel.send(true); condition.wait(mutex) }

@@ -6,7 +6,7 @@ require 'agent'
 $size = (ARGV.pop || 0).to_i
 
 def generate(channels)
-  ch = channel!(:type => Integer, :size => $size)
+  ch = channel!(Integer, $size)
   channels << ch
   go!{ i = 1; loop { ch << i+= 1} }
 
@@ -14,7 +14,7 @@ def generate(channels)
 end
 
 def filter(in_channel, prime, channels)
-  out = channel!(:type => Integer, :size => $size)
+  out = channel!(Integer, $size)
   channels << out
 
   go! do
@@ -28,7 +28,7 @@ def filter(in_channel, prime, channels)
 end
 
 def sieve(channels)
-  out = channel!(:type => Integer, :size => $size)
+  out = channel!(Integer, $size)
   channels << out
 
   go! do

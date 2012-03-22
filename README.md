@@ -18,7 +18,7 @@ This gem is a work in progress, so treat it as such.
 A simple multi-threaded consumer-producer, except without a thread or a mutex in sight! Note that by default Agent channels are unbuffered, meaning that the size is implicitly set to 0. Hence, in example below, the producer will generate a single value, and block until we call receive - rinse, repeat.
 
 ```ruby
-c = channel!(:type => Integer)
+c = channel!(Integer)
 
 go! do
   i = 0
@@ -33,8 +33,8 @@ p c.receive.first # => 2
 A "select" statement chooses which of a set of possible communications will proceed. It looks similar to a "switch" statement but with the cases all referring to communication operations. Select will block until one of the channels becomes available:
 
 ```ruby
-cw = channel!(:type => Integer, :size => 1)
-cr = channel!(:type => Integer, :size => 1)
+cw = channel!(Integer, 1)
+cr = channel!(Integer, 1)
 
 select do |s|
   s.case(cr, :receive) { |value| do_something(value) }
@@ -45,7 +45,7 @@ end
 In example above, cr is currently unavailable to read from (since its empty), but cw is ready for writing since the channel is buffered and empty. Hence, select will immediately choose the cw case and execute that code block.
 
 ```ruby
-cr = channel!(:type => Integer, :size => 1)
+cr = channel!(Integer, 1)
 
 select do |s|
   s.case(cr, :receive) { |value| do_something(value) }
@@ -56,7 +56,7 @@ end
 In this example, cr is unavailable for read (since its empty), but we also provide "default" case which is executed immediately if no other cases are matched. In other words, no blocking.
 
 ```ruby
-cr = channel!(:type => Integer, :size => 1)
+cr = channel!(Integer, 1)
 
 select do |s|
   s.case(cr, :receive) { |value| do_something(value) }
