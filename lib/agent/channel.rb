@@ -10,7 +10,7 @@ module Agent
   end
 
   class Channel
-    attr_reader :name, :chan, :queue
+    attr_reader :name, :chan
 
     class InvalidDirection < Exception; end
     class Untyped < Exception; end
