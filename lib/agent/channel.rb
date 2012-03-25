@@ -10,7 +10,7 @@ module Agent
   end
 
   class Channel
-    attr_reader :name, :chan, :direction
+    attr_reader :name, :direction
 
     def initialize(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
