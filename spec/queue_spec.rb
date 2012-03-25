@@ -20,6 +20,10 @@ describe Agent::Queue do
       lambda{ Agent::Queue::Buffered.new(String, -1) }.should raise_error(Agent::Errors::InvalidQueueSize)
     end
 
+    it "should raise an erro when an object of an invalid type is pushed" do
+      lambda { @queue.push(1) }.should raise_error(Agent::Errors::InvalidType)
+    end
+
     it "should enqueue and dequeue in order" do
       20.times{|i| @queue.push(i.to_s, :deferred => true) }
 
