@@ -10,22 +10,17 @@ module Agent
   end
 
   class Channel
-    attr_reader :name, :direction
+    attr_reader :name, :direction, :type, :max
 
     def initialize(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
-
-      @type = args.shift
-      raise Errors::Untyped unless @type
-      # Module includes both classes and modules
-      raise Errors::InvalidType unless @type.is_a?(Module)
-
+      @type        = args.shift
       @max         = args.shift  || 0
       @closed      = false
       @name        = opts[:name] || UUID.generate
       @direction   = opts[:direction] || :bidirectional
       @close_mutex = Mutex.new
-      @queue       = Queues.register(@name, @max)
+      @queue       = Queues.register(@name, @type, @max)
     end
 
     def queue
@@ -40,7 +35,7 @@ module Agent
     def marshal_load(ary)
       @closed, @name, @max, @type, @direction = *ary
       @queue = Queues[@name]
-      @closed = @queue.nil?
+      @closed = @queue.nil? || @queue.closed?
       self
     end
 
@@ -53,14 +48,7 @@ module Agent
 
     def send(object, options={})
       check_direction(:send)
-      check_type(object)
-
-      push = Push.new(object, options)
-      queue.push(push)
-
-      return push if options[:deferred]
-
-      push.wait
+      queue.push(object, options)
     end
     alias :push :send
     alias :<<   :send
@@ -73,14 +61,7 @@ module Agent
 
     def receive(options={})
       check_direction(:receive)
-
-      pop = Pop.new(options)
-      queue.pop(pop)
-
-      return pop if options[:deferred]
-
-      ok = pop.wait
-      [pop.object, ok]
+      queue.pop(options)
     end
     alias :pop  :receive
 

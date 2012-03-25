@@ -10,17 +10,27 @@ module Agent
 
     self.queues = {}
 
-    def self.register(name, max)
+    def self.register(name, type, max)
+      raise Errors::Untyped unless type
+      raise Errors::InvalidType unless type.is_a?(Module)
+
       LOCK.synchronize do
         queue = queues[name]
-        return queue if queue
+
+        if queue
+          if queue.type == type
+            return queue
+          else
+            raise Errors::InvalidType, "Type #{type.name} is different than the queue's type (#{queue.type.name})"
+          end
+        end
 
         raise Errors::InvalidQueueSize, "queue size must be at least 0" unless max >= 0
 
         if max > 0
-          queues[name] = Queue::Buffered.new(max)
+          queues[name] = Queue::Buffered.new(type, max)
         else
-          queues[name] = Queue::Unbuffered.new
+          queues[name] = Queue::Unbuffered.new(type)
         end
       end
     end

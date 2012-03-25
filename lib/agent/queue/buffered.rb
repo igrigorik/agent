@@ -6,9 +6,9 @@ module Agent
     class Buffered < Queue
       attr_reader :size, :max
 
-      def initialize(max=1)
+      def initialize(type, max=1)
         raise Errors::InvalidQueueSize, "queue size must be at least 1" unless max >= 1
-        super()
+        super(type)
         @max = max
       end
 

@@ -4,9 +4,14 @@ require "agent/errors"
 
 module Agent
   class Queue
-    attr_reader :queue, :operations, :pushes, :pops, :mutex
+    attr_reader :type, :queue, :operations, :pushes, :pops, :mutex
 
-    def initialize
+    def initialize(type)
+      @type = type
+
+      raise Errors::Untyped unless @type
+      raise Errors::InvalidType unless @type.is_a?(Module)
+
       @closed = false
 
       @queue = []
@@ -56,22 +61,37 @@ module Agent
     def closed?; @closed; end
     def open?;   !@closed;   end
 
-    def push(p)
+    def push(object, options={})
+      raise Errors::InvalidType unless object.is_a?(@type)
+
+      push = Push.new(object, options)
+
       mutex.synchronize do
         raise Errors::ChannelClosed if @closed
-        operations << p
-        pushes << p
+        operations << push
+        pushes << push
         process
       end
+
+      return push if options[:deferred]
+
+      push.wait
     end
 
-    def pop(p)
+    def pop(options={})
+      pop = Pop.new(options)
+
       mutex.synchronize do
         raise Errors::ChannelClosed if @closed
-        operations << p
-        pops << p
+        operations << pop
+        pops << pop
         process
       end
+
+      return pop if options[:deferred]
+
+      ok = pop.wait
+      [pop.object, ok]
     end
 
     def remove_operations(ops)

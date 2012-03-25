@@ -4,7 +4,7 @@ describe Agent::Queue do
 
   context "with an buffered queue" do
     before do
-      @queue = Agent::Queue::Buffered.new(2)
+      @queue = Agent::Queue::Buffered.new(String, 2)
     end
 
     it "should be buffered" do
@@ -16,41 +16,36 @@ describe Agent::Queue do
     end
 
     it "should raise an error if the queue size is <= 0" do
-      lambda{ Agent::Queue::Buffered.new(0) }.should raise_error(Agent::Errors::InvalidQueueSize)
-      lambda{ Agent::Queue::Buffered.new(-1) }.should raise_error(Agent::Errors::InvalidQueueSize)
+      lambda{ Agent::Queue::Buffered.new(String, 0) }.should raise_error(Agent::Errors::InvalidQueueSize)
+      lambda{ Agent::Queue::Buffered.new(String, -1) }.should raise_error(Agent::Errors::InvalidQueueSize)
     end
 
     it "should enqueue and dequeue in order" do
-      20.times{|i| @queue.push(Agent::Push.new(i)) }
+      20.times{|i| @queue.push(i.to_s, :deferred => true) }
 
       previous = -1
 
       20.times do |i|
-        pop = Agent::Pop.new
-        @queue.pop(pop)
-        pop.object.should > previous
-        previos = pop.object
+        o = @queue.pop[0].to_i
+        o.should > previous
+        previous = o
       end
     end
 
     context "when the queue is empty" do
       it "should hold any attempts to pop from it" do
         @queue.operations.should be_empty
-        pop = Agent::Pop.new
-        @queue.pop(pop)
-        pop.should_not be_received
+        @queue.pop(:deferred => true)
         @queue.operations.should_not be_empty
       end
 
       it "should be able to be pushed to" do
-        push = Agent::Push.new("1")
-        @queue.push(push)
-        push.should be_sent
+        @queue.push("1")
       end
 
       it "should increase in size when pushed to" do
         @queue.size.should == 0
-        @queue.push(Agent::Push.new("1"))
+        @queue.push("1")
         @queue.size.should == 1
       end
 
@@ -65,31 +60,26 @@ describe Agent::Queue do
 
     context "when there are elements in the queue and still space left" do
       before do
-        @queue.push(Agent::Push.new("1"))
+        @queue.push("1")
       end
 
       it "should be able to be pushed to" do
-        push = Agent::Push.new("1")
-        @queue.push(push)
-        push.should be_sent
+        @queue.push("1")
       end
 
       it "should increase in size when pushed to" do
         @queue.size.should == 1
-        @queue.push(Agent::Push.new("1"))
+        @queue.push("1")
         @queue.size.should == 2
       end
 
       it "should be able to be popped from" do
-        pop = Agent::Pop.new
-        @queue.pop(pop)
-        pop.object.should == "1"
-        pop.should be_received
+        @queue.pop[0].should == "1"
       end
 
       it "should decrease in size when popped from" do
         @queue.size.should == 1
-        @queue.pop(Agent::Pop.new)
+        @queue.pop
         @queue.size.should == 0
       end
 
@@ -104,22 +94,17 @@ describe Agent::Queue do
 
     context "when the queue is full" do
       before do
-        2.times { @queue.push(Agent::Push.new("1")) }
+        2.times { @queue.push("1") }
       end
 
       it "should hold any attempts to push to it" do
         @queue.operations.should be_empty
-        push = Agent::Push.new("1")
-        @queue.push(push)
-        push.should_not be_sent
+        @queue.push("1", :deferred => true)
         @queue.operations.should_not be_empty
       end
 
       it "should be able to be popped from" do
-        pop = Agent::Pop.new
-        @queue.pop(pop)
-        pop.object.should == "1"
-        pop.should be_received
+        @queue.pop[0].should == "1"
       end
 
       it "should not be pushable" do
@@ -133,10 +118,7 @@ describe Agent::Queue do
 
     context "when being closed" do
       before do
-        @push1, @push2, @push3 = (1..3).map{ Agent::Push.new("1") }
-        @queue.push(@push1)
-        @queue.push(@push2)
-        @queue.push(@push3)
+        @push1, @push2, @push3 = (1..3).map{ @queue.push("1", :deferred => true) }
       end
 
       it "should go from open to closed" do
@@ -175,25 +157,24 @@ describe Agent::Queue do
       it "should raise an error when being acted upon afterwards" do
         @queue.close
         lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
-        lambda{ @queue.push(Agent::Push.new("1")) }.should raise_error(Agent::Errors::ChannelClosed)
-        lambda{ @queue.pop(Agent::Push.new("1")) }.should raise_error(Agent::Errors::ChannelClosed)
+        lambda{ @queue.push("1") }.should raise_error(Agent::Errors::ChannelClosed)
+        lambda{ @queue.pop }.should raise_error(Agent::Errors::ChannelClosed)
       end
     end
 
     context "when removing operations" do
       before do
-        @pushes = (1..8).map{|i| Agent::Push.new(i.to_s) }
-        @pushes.each{|push| @queue.push(push) }
+        @pushes = (1..8).map{|i| @queue.push(i.to_s, :deferred => true) }
       end
 
       it "should remove the operations" do
         removable_pushes = @pushes.values_at(5, 6) # values "6" and "7"
         @queue.remove_operations(removable_pushes)
         while @queue.pop?
-          pop = Agent::Pop.new
-          @queue.pop(pop)
-          pop.object.should_not == "6"
-          pop.object.should_not == "7"
+          i = @queue.pop[0]
+          i.should_not be_nil
+          i.should_not == "6"
+          i.should_not == "7"
         end
       end
     end
@@ -201,7 +182,7 @@ describe Agent::Queue do
 
   context "with a unbuffered queue" do
     before do
-      @queue = Agent::Queue::Unbuffered.new
+      @queue = Agent::Queue::Unbuffered.new(String)
     end
 
     it "should not be buffered" do
@@ -213,15 +194,14 @@ describe Agent::Queue do
     end
 
     it "should enqueue and dequeue in order" do
-      20.times{|i| @queue.push(Agent::Push.new(i)) }
+      20.times{|i| @queue.push(i.to_s, :deferred => true) }
 
       previous = -1
 
       20.times do |i|
-        pop = Agent::Pop.new
-        @queue.pop(pop)
-        pop.object.should > previous
-        previos = pop.object
+        o = @queue.pop[0].to_i
+        o.should > previous
+        previous = o
       end
     end
 
@@ -236,16 +216,14 @@ describe Agent::Queue do
 
       it "should queue pushes" do
         @queue.operations.size.should == 0
-        push = Agent::Push.new("1")
-        @queue.push(push)
+        push = @queue.push("1", :deferred => true)
         push.should_not be_sent
         @queue.operations.size.should == 1
       end
 
       it "should queue pops" do
         @queue.operations.size.should == 0
-        pop = Agent::Pop.new
-        @queue.pop(pop)
+        pop = @queue.pop(:deferred => true)
         pop.should_not be_received
         @queue.operations.size.should == 1
       end
@@ -253,8 +231,7 @@ describe Agent::Queue do
 
     context "when there is a pop waiting" do
       before do
-        @pop = Agent::Pop.new
-        @queue.pop(@pop)
+        @pop = @queue.pop(:deferred => true)
       end
 
       it "should not be poppable" do
@@ -266,8 +243,7 @@ describe Agent::Queue do
       end
 
       it "should execute a push and the waiting pop immediately" do
-        push = Agent::Push.new("1")
-        @queue.push(push)
+        push = @queue.push("1", :deferred => true)
         @pop.should be_received
         push.should be_sent
         @pop.object.should == "1"
@@ -275,8 +251,7 @@ describe Agent::Queue do
 
       it "should queue pops" do
         @queue.operations.size.should == 1
-        pop = Agent::Pop.new
-        @queue.pop(pop)
+        pop = @queue.pop(:deferred => true)
         pop.should_not be_received
         @queue.operations.size.should == 2
       end
@@ -284,8 +259,7 @@ describe Agent::Queue do
 
     context "when there is a push waiting" do
       before do
-        @push = Agent::Push.new("1")
-        @queue.push(@push)
+        @push = @queue.push("1", :deferred => true)
       end
 
       it "should be poppable" do
@@ -298,15 +272,13 @@ describe Agent::Queue do
 
       it "should queue pushes" do
         @queue.operations.size.should == 1
-        push = Agent::Push.new("1")
-        @queue.push(push)
+        push = @queue.push("1", :deferred => true)
         push.should_not be_sent
         @queue.operations.size.should == 2
       end
 
       it "should execute a pop and the waiting push immediately" do
-        pop = Agent::Pop.new
-        @queue.pop(pop)
+        pop = @queue.pop(:deferred => true)
         @push.should be_sent
         pop.should be_received
         pop.object.should == "1"
@@ -315,9 +287,7 @@ describe Agent::Queue do
 
     context "when being closed" do
       before do
-        @push1, @push2 = (1..2).map{ Agent::Push.new("1") }
-        @queue.push(@push1)
-        @queue.push(@push2)
+        @push1, @push2 = (1..2).map{ @queue.push("1", :deferred => true) }
       end
 
       it "should go from open to closed" do
@@ -351,25 +321,24 @@ describe Agent::Queue do
       it "should raise an error when being acted upon afterwards" do
         @queue.close
         lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
-        lambda{ @queue.push(Agent::Push.new("1")) }.should raise_error(Agent::Errors::ChannelClosed)
-        lambda{ @queue.pop(Agent::Push.new("1")) }.should raise_error(Agent::Errors::ChannelClosed)
+        lambda{ @queue.push("1") }.should raise_error(Agent::Errors::ChannelClosed)
+        lambda{ @queue.pop }.should raise_error(Agent::Errors::ChannelClosed)
       end
     end
 
     context "when removing operations" do
       before do
-        @pushes = (1..8).map{|i| Agent::Push.new(i.to_s) }
-        @pushes.each{|push| @queue.push(push) }
+        @pushes = (1..8).map{|i| @queue.push(i.to_s, :deferred => true) }
       end
 
       it "should remove the operations" do
         removable_pushes = @pushes.values_at(5, 6) # values "6" and "7"
         @queue.remove_operations(removable_pushes)
         while @queue.pop?
-          pop = Agent::Pop.new
-          @queue.pop(pop)
-          pop.object.should_not == "6"
-          pop.object.should_not == "7"
+          i = @queue.pop[0]
+          i.should_not be_nil
+          i.should_not == "6"
+          i.should_not == "7"
         end
       end
     end
