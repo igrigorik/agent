@@ -11,7 +11,6 @@ module Agent
 
       # slow path
       @mutex.synchronize do
-        # Hold this mutex for the minimum amount of time possible, since mutexes are slow
         return nil, error if @performed
         @performed = true
       end

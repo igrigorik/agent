@@ -4,7 +4,6 @@ module Agent
   class BlockingOnce < Once
     def perform
       @mutex.synchronize do
-        # Hold this mutex for the minimum amount of time possible, since mutexes are slow
         return nil, error if @performed
 
         begin
