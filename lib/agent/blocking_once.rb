@@ -8,7 +8,7 @@ module Agent
         return nil, error if @performed
 
         begin
-          value = yield
+          value      = yield
           @performed = true
           return value, nil
         rescue Errors::Rollback

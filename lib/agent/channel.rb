@@ -13,7 +13,7 @@ module Agent
     attr_reader :name, :direction, :type, :max
 
     def initialize(*args)
-      opts = args.last.is_a?(Hash) ? args.pop : {}
+      opts         = args.last.is_a?(Hash) ? args.pop : {}
       @type        = args.shift
       @max         = args.shift  || 0
       @closed      = false

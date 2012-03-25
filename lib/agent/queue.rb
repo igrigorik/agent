@@ -14,12 +14,12 @@ module Agent
 
       @closed = false
 
-      @queue = []
+      @queue      = []
+      @operations = []
+      @pushes     = []
+      @pops       = []
 
-      @operations   = []
-      @pushes       = []
-      @pops         = []
-      @mutex        = Mutex.new
+      @mutex = Mutex.new
 
       reset_custom_state
     end

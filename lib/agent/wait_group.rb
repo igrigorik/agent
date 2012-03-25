@@ -5,9 +5,9 @@ module Agent
     attr_reader :count
 
     def initialize
-      @count   = 0
-      @mutex   = Mutex.new
-      @cvar    = ConditionVariable.new
+      @count = 0
+      @mutex = Mutex.new
+      @cvar  = ConditionVariable.new
     end
 
     def wait
