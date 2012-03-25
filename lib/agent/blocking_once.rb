@@ -1,7 +1,7 @@
+require "agent/errors"
+
 module Agent
   class BlockingOnce < Once
-    class Rollback < StandardError; end
-
     def perform
       @mutex.synchronize do
         # Hold this mutex for the minimum amount of time possible, since mutexes are slow
@@ -11,7 +11,7 @@ module Agent
           value = yield
           @performed = true
           return value, nil
-        rescue Rollback
+        rescue Errors::Rollback
           return nil, rollback_error
         end
       end
@@ -20,7 +20,7 @@ module Agent
   protected
 
     def rollback_error
-      @rollback_error ||= Agent::Error.new("rolled back")
+      @rollback_error ||= Error.new("rolled back")
     end
 
   end

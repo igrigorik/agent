@@ -43,7 +43,7 @@ describe Agent::Pop do
 
     it "be able to be gracefully rolled back" do
       @pop.should_not be_received
-      @pop.send{ raise Agent::Pop::Rollback }
+      @pop.send{ raise Agent::Errors::Rollback }
       @pop.should_not be_received
     end
   end
@@ -69,7 +69,7 @@ describe Agent::Pop do
     it "be able to be gracefully rolled back" do
       @blocking_once.should_not be_performed
       @pop.should_not be_received
-      @pop.send{ raise Agent::Pop::Rollback }
+      @pop.send{ raise Agent::Errors::Rollback }
       @blocking_once.should_not be_performed
       @pop.should_not be_received
     end

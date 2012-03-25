@@ -16,8 +16,8 @@ describe Agent::Queue do
     end
 
     it "should raise an error if the queue size is <= 0" do
-      lambda{ Agent::Queue::Buffered.new(0) }.should raise_error(Agent::Queue::Buffered::InvalidQueueSize)
-      lambda{ Agent::Queue::Buffered.new(-1) }.should raise_error(Agent::Queue::Buffered::InvalidQueueSize)
+      lambda{ Agent::Queue::Buffered.new(0) }.should raise_error(Agent::Errors::InvalidQueueSize)
+      lambda{ Agent::Queue::Buffered.new(-1) }.should raise_error(Agent::Errors::InvalidQueueSize)
     end
 
     it "should enqueue and dequeue in order" do
@@ -174,9 +174,9 @@ describe Agent::Queue do
 
       it "should raise an error when being acted upon afterwards" do
         @queue.close
-        lambda{ @queue.close }.should raise_error(Agent::ChannelClosed)
-        lambda{ @queue.push(Agent::Push.new("1")) }.should raise_error(Agent::ChannelClosed)
-        lambda{ @queue.pop(Agent::Push.new("1")) }.should raise_error(Agent::ChannelClosed)
+        lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
+        lambda{ @queue.push(Agent::Push.new("1")) }.should raise_error(Agent::Errors::ChannelClosed)
+        lambda{ @queue.pop(Agent::Push.new("1")) }.should raise_error(Agent::Errors::ChannelClosed)
       end
     end
 
@@ -350,9 +350,9 @@ describe Agent::Queue do
 
       it "should raise an error when being acted upon afterwards" do
         @queue.close
-        lambda{ @queue.close }.should raise_error(Agent::ChannelClosed)
-        lambda{ @queue.push(Agent::Push.new("1")) }.should raise_error(Agent::ChannelClosed)
-        lambda{ @queue.pop(Agent::Push.new("1")) }.should raise_error(Agent::ChannelClosed)
+        lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
+        lambda{ @queue.push(Agent::Push.new("1")) }.should raise_error(Agent::Errors::ChannelClosed)
+        lambda{ @queue.pop(Agent::Push.new("1")) }.should raise_error(Agent::Errors::ChannelClosed)
       end
     end
 

@@ -23,11 +23,11 @@ describe Agent::WaitGroup do
   end
 
   it "should error when the count becomes negative via WaitGroup#add" do
-    lambda{ @wait_group.add(-1) }.should raise_error(Agent::WaitGroup::NegativeWaitGroupCount)
+    lambda{ @wait_group.add(-1) }.should raise_error(Agent::Errors::NegativeWaitGroupCount)
   end
 
   it "should error when the count becomes negative via WaitGroup#done" do
-    lambda{ @wait_group.done }.should raise_error(Agent::WaitGroup::NegativeWaitGroupCount)
+    lambda{ @wait_group.done }.should raise_error(Agent::Errors::NegativeWaitGroupCount)
   end
 
   it "should allow waiting on a wait_group and should signal when it is done" do

@@ -23,7 +23,7 @@ module Agent
 
     def notify(payload)
       @mutex.synchronize do
-        return Agent::Error.new("already notified") if notified?
+        return Error.new("already notified") if notified?
         @payload  = payload
         @notified = true
         @cvar.signal

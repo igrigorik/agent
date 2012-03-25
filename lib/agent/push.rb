@@ -1,12 +1,12 @@
+require "agent/errors"
+
 module Agent
   class Push
-    class Rollback < Exception; end
-
     attr_reader :object, :uuid, :blocking_once, :notifier
 
     def initialize(object, options={})
       @object        = Marshal.dump(object)
-      @uuid          = options[:uuid] || Agent::UUID.generate
+      @uuid          = options[:uuid] || UUID.generate
       @blocking_once = options[:blocking_once]
       @notifier      = options[:notifier]
       @mutex         = Mutex.new
@@ -28,24 +28,20 @@ module Agent
         until @sent || @closed
           @cvar.wait(@mutex)
         end
-        raise ChannelClosed if @closed
+        raise Errors::ChannelClosed if @closed
       end
     end
 
     def receive
       @mutex.synchronize do
-        raise ChannelClosed if @closed
+        raise Errors::ChannelClosed if @closed
 
         if @blocking_once
           value, error = @blocking_once.perform do
-            begin
-              yield @object
-              @sent = true
-              @cvar.signal
-              @notifier.notify(self) if @notifier
-            rescue Rollback
-              raise BlockingOnce::Rollback
-            end
+            yield @object
+            @sent = true
+            @cvar.signal
+            @notifier.notify(self) if @notifier
           end
 
           return error
@@ -55,7 +51,7 @@ module Agent
             @sent = true
             @cvar.signal
             @notifier.notify(self) if @notifier
-          rescue Rollback
+          rescue Errors::Rollback
           end
         end
       end

@@ -30,8 +30,8 @@ describe Agent::Channel do
 
       c.direction.should == :send
 
-      lambda { c.pop }.should raise_error Agent::Channel::InvalidDirection
-      lambda { c.receive }.should raise_error Agent::Channel::InvalidDirection
+      lambda { c.pop }.should raise_error Agent::Errors::InvalidDirection
+      lambda { c.receive }.should raise_error Agent::Errors::InvalidDirection
 
       c.close
     end
@@ -39,9 +39,9 @@ describe Agent::Channel do
     it "should support receive only" do
       c = channel!(String, :direction => :receive)
 
-      lambda { c << "hello"   }.should raise_error Agent::Channel::InvalidDirection
-      lambda { c.push "hello" }.should raise_error Agent::Channel::InvalidDirection
-      lambda { c.send "hello" }.should raise_error Agent::Channel::InvalidDirection
+      lambda { c << "hello"   }.should raise_error Agent::Errors::InvalidDirection
+      lambda { c.push "hello" }.should raise_error Agent::Errors::InvalidDirection
+      lambda { c.send "hello" }.should raise_error Agent::Errors::InvalidDirection
 
       c.direction.should == :receive
 
@@ -89,7 +89,7 @@ describe Agent::Channel do
 
     it "should raise an error the second time it is called" do
       @c.close
-      lambda { @c.close }.should raise_error(Agent::ChannelClosed)
+      lambda { @c.close }.should raise_error(Agent::Errors::ChannelClosed)
     end
 
     it "should respond to closed?" do
@@ -106,12 +106,12 @@ describe Agent::Channel do
 
     it "should raise an error when sending to a channel that has already been closed" do
       @c.close
-      lambda { @c.send("a") }.should raise_error(Agent::ChannelClosed)
+      lambda { @c.send("a") }.should raise_error(Agent::Errors::ChannelClosed)
     end
 
     it "should raise an error when receiving from a channel that has already been closed" do
       @c.close
-      lambda { @c.receive }.should raise_error(Agent::ChannelClosed)
+      lambda { @c.receive }.should raise_error(Agent::Errors::ChannelClosed)
     end
   end
 
@@ -132,7 +132,7 @@ describe Agent::Channel do
 
   context "typed" do
     it "should create a typed channel" do
-      lambda { channel! }.should raise_error Agent::Channel::Untyped
+      lambda { channel! }.should raise_error Agent::Errors::Untyped
       c = nil
       lambda { c = channel!(Integer) }.should_not raise_error
       c.close
@@ -141,7 +141,7 @@ describe Agent::Channel do
     it "should reject messages of invalid type" do
       c = channel!(String)
       go!{ c.receive }
-      lambda { c.send 1 }.should raise_error(Agent::Channel::InvalidType)
+      lambda { c.send 1 }.should raise_error(Agent::Errors::InvalidType)
       lambda { c.send "hello" }.should_not raise_error
       c.close
     end

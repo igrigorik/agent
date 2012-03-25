@@ -60,7 +60,7 @@ describe Agent::BlockingOnce do
       @blocking_once.perform do
         sleep 0.1
         finished_channel.send(true)
-        raise Agent::BlockingOnce::Rollback
+        raise Agent::Errors::Rollback
       end
     end
 

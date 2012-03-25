@@ -1,4 +1,5 @@
 require "agent/queue"
+require "agent/errors"
 
 module Agent
   class Queue
@@ -38,7 +39,7 @@ module Agent
               @waiting_pops -= 1
               operations.delete(pop_operation)
               pops.delete(pop_operation)
-              raise Push::Rollback if error
+              raise Errors::Rollback if error
             end
 
             if error.nil? || error.message?("already performed")
@@ -66,7 +67,7 @@ module Agent
               @waiting_pushes -= 1
               operations.delete(push_operation)
               pushes.delete(push_operation)
-              raise Pop::Rollback if error
+              raise Errors::Rollback if error
 
               value
             end

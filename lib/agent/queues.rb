@@ -1,3 +1,5 @@
+require "agent/errors"
+
 module Agent
   module Queues
     LOCK = Mutex.new
@@ -13,12 +15,12 @@ module Agent
         queue = queues[name]
         return queue if queue
 
-        raise InvalidQueueSize, "queue size must be at least 0" unless max >= 0
+        raise Errors::InvalidQueueSize, "queue size must be at least 0" unless max >= 0
 
         if max > 0
-          queues[name] = Agent::Queue::Buffered.new(max)
+          queues[name] = Queue::Buffered.new(max)
         else
-          queues[name] = Agent::Queue::Unbuffered.new
+          queues[name] = Queue::Unbuffered.new
         end
       end
     end

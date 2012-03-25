@@ -34,12 +34,12 @@ describe Agent::Push do
 
     it "should raise an error on the waiter when closed" do
       go!{ sleep 0.1; @push.close }
-      lambda{ @push.wait }.should raise_error(Agent::ChannelClosed)
+      lambda{ @push.wait }.should raise_error(Agent::Errors::ChannelClosed)
     end
 
     it "be able to be gracefully rolled back" do
       @push.should_not be_sent
-      @push.receive{|v| raise Agent::Push::Rollback }
+      @push.receive{|v| raise Agent::Errors::Rollback }
       @push.should_not be_sent
     end
   end
@@ -67,7 +67,7 @@ describe Agent::Push do
     it "be able to be gracefully rolled back" do
       @blocking_once.should_not be_performed
       @push.should_not be_sent
-      @push.receive{|v| raise Agent::Push::Rollback }
+      @push.receive{|v| raise Agent::Errors::Rollback }
       @blocking_once.should_not be_performed
       @push.should_not be_sent
     end

@@ -1,10 +1,9 @@
 require "agent/queue/buffered"
 require "agent/queue/unbuffered"
+require "agent/errors"
 
 module Agent
   class Queue
-    class NotImplementedError < Exception; end
-
     attr_reader :queue, :operations, :pushes, :pops, :mutex
 
     def initialize
@@ -22,27 +21,27 @@ module Agent
 
     def buffered?
       # implement in subclass
-      raise NotImplementedError
+      raise Errors::NotImplementedError
     end
 
     def unbuffered?
       # implement in subclass
-      raise NotImplementedError
+      raise Errors::NotImplementedError
     end
 
     def pop?
       # implement in subclass
-      raise NotImplementedError
+      raise Errors::NotImplementedError
     end
 
     def push?
       # implement in subclass
-      raise NotImplementedError
+      raise Errors::NotImplementedError
     end
 
     def close
       mutex.synchronize do
-        raise ChannelClosed if @closed
+        raise Errors::ChannelClosed if @closed
         @closed = true
         @operations.each{|o| o.close }
         @operations.clear
@@ -59,7 +58,7 @@ module Agent
 
     def push(p)
       mutex.synchronize do
-        raise ChannelClosed if @closed
+        raise Errors::ChannelClosed if @closed
         operations << p
         pushes << p
         process
@@ -68,7 +67,7 @@ module Agent
 
     def pop(p)
       mutex.synchronize do
-        raise ChannelClosed if @closed
+        raise Errors::ChannelClosed if @closed
         operations << p
         pops << p
         process
@@ -107,7 +106,7 @@ module Agent
 
     def process
       # implement in subclass
-      raise NotImplementedError
+      raise Errors::NotImplementedError
     end
 
   end

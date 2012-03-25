@@ -1,7 +1,7 @@
+require "agent/errors"
+
 module Agent
   class WaitGroup
-    class NegativeWaitGroupCount < Exception; end
-
     attr_reader :count
 
     def initialize
@@ -35,7 +35,7 @@ module Agent
     # Expects to be called inside of the mutex
     def modify_count(delta)
       @count += delta
-      raise NegativeWaitGroupCount if @count < 0
+      raise Errors::NegativeWaitGroupCount if @count < 0
       @cvar.signal if @count == 0
     end
 

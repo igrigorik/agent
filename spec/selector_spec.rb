@@ -50,7 +50,7 @@ describe Agent::Selector do
         select! do |s|
           s.case(@c, :receive)
         end
-      }.should raise_error(Agent::BlockMissing)
+      }.should raise_error(Agent::Errors::BlockMissing)
     end
 
     it "should not raise an error when a block is missing on send" do
@@ -61,7 +61,7 @@ describe Agent::Selector do
           s.case(@c, :send, 1)
           s.cases.size.should == 0
         end
-      }.should_not raise_error(Agent::BlockMissing)
+      }.should_not raise_error(Agent::Errors::BlockMissing)
     end
 
     it "should scan all cases to identify available actions and execute first available one" do
@@ -100,7 +100,7 @@ describe Agent::Selector do
           s.case(@c, :send, 1)
           s.case(@c, :receive){}
         end
-      }.should raise_error(Agent::ChannelClosed)
+      }.should raise_error(Agent::Errors::ChannelClosed)
     end
 
     context "select immediately available channel" do
@@ -235,7 +235,7 @@ describe Agent::Selector do
           s.case(@c, :receive)
           s.cases.size.should == 0
         end
-      }.should raise_error(Agent::BlockMissing)
+      }.should raise_error(Agent::Errors::BlockMissing)
     end
 
     it "should not raise an error when a block is missing on send" do
@@ -244,7 +244,7 @@ describe Agent::Selector do
           s.case(@c, :send, 1)
           s.cases.size.should == 0
         end
-      }.should_not raise_error(Agent::BlockMissing)
+      }.should_not raise_error(Agent::Errors::BlockMissing)
     end
 
     it "should scan all cases to identify available actions and execute first available one" do
@@ -285,7 +285,7 @@ describe Agent::Selector do
           s.case(@c, :send, 1)
           s.case(@c, :send, 2){}
         end
-      }.should raise_error(Agent::ChannelClosed)
+      }.should raise_error(Agent::Errors::ChannelClosed)
     end
 
     context "select immediately available channel" do

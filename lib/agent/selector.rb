@@ -7,8 +7,8 @@ require "agent/errors"
 
 module Agent
   def self.select!
-    raise BlockMissing unless block_given?
-    selector = Agent::Selector.new
+    raise Errors::BlockMissing unless block_given?
+    selector = Selector.new
     yield selector
     selector.select
   ensure
@@ -20,9 +20,6 @@ module Agent
 
   class Selector
     attr_reader :cases
-
-    class DefaultCaseAlreadyDefinedError < Exception; end
-    class InvalidDirection < Exception; end
 
     Case = Struct.new(:uuid, :channel, :direction, :value, :blk)
 
@@ -36,7 +33,7 @@ module Agent
 
     def default(&blk)
       if @default_case
-        raise DefaultCaseAlreadyDefinedError
+        raise Errors::DefaultCaseAlreadyDefinedError
       else
         @default_case = self.case(channel!(TrueClass, 1), :receive, &blk)
       end
@@ -49,9 +46,9 @@ module Agent
     end
 
     def case(chan, direction, value=nil, &blk)
-      raise "invalid case, must be a channel" unless chan.is_a?(Agent::Channel)
-      raise BlockMissing if blk.nil? && direction == :receive
-      raise InvalidDirection if direction != :send && direction != :receive
+      raise "invalid case, must be a channel" unless chan.is_a?(Channel)
+      raise Errors::BlockMissing if blk.nil? && direction == :receive
+      raise Errors::InvalidDirection if direction != :send && direction != :receive
       add_case(chan, direction, value, &blk)
     end
 
@@ -95,7 +92,7 @@ module Agent
   protected
 
     def add_case(chan, direction, value=nil, &blk)
-      uuid = Agent::UUID.generate
+      uuid = UUID.generate
       cse = Case.new(uuid, chan, direction, value, blk)
       @ordered_cases << cse
       @cases[uuid] = cse
@@ -104,7 +101,7 @@ module Agent
     end
 
     def execute_case(operation)
-      raise ChannelClosed if operation.closed?
+      raise Errors::ChannelClosed if operation.closed?
 
       cse = @cases[operation.uuid]
       blk, direction = cse.blk, cse.direction

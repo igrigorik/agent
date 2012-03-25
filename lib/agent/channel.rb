@@ -6,27 +6,23 @@ require "agent/errors"
 
 module Agent
   def self.channel!(*args)
-    Agent::Channel.new(*args)
+    Channel.new(*args)
   end
 
   class Channel
     attr_reader :name, :chan, :direction
 
-    class InvalidDirection < Exception; end
-    class Untyped < Exception; end
-    class InvalidType < Exception; end
-
     def initialize(*args)
       opts = args.last.is_a?(Hash) ? args.pop : {}
 
       @type = args.shift
-      raise Untyped unless @type
+      raise Errors::Untyped unless @type
       # Module includes both classes and modules
-      raise InvalidType unless @type.is_a?(Module)
+      raise Errors::InvalidType unless @type.is_a?(Module)
 
       @max         = args.shift  || 0
       @closed      = false
-      @name        = opts[:name] || Agent::UUID.generate
+      @name        = opts[:name] || UUID.generate
       @direction   = opts[:direction] || :bidirectional
       @close_mutex = Mutex.new
       @queue       = Queues.register(@name, @max)
@@ -34,7 +30,7 @@ module Agent
 
     def queue
       q = @queue
-      raise ChannelClosed unless q
+      raise Errors::ChannelClosed unless q
       q
     end
 
@@ -96,7 +92,7 @@ module Agent
 
     def close
       @close_mutex.synchronize do
-        raise ChannelClosed if @closed
+        raise Errors::ChannelClosed if @closed
         @closed = true
         @queue.close
         @queue = nil
@@ -126,18 +122,18 @@ module Agent
 
     def as_direction_only(direction)
       @close_mutex.synchronize do
-        raise ChannelClosed if @closed
+        raise Errors::ChannelClosed if @closed
         channel!(@type, @max, :name => @name, :direction => direction)
       end
     end
 
     def check_type(object)
-      raise InvalidType unless object.is_a?(@type)
+      raise Errors::InvalidType unless object.is_a?(@type)
     end
 
     def check_direction(direction)
       return if @direction == :bidirectional
-      raise InvalidDirection if @direction != direction
+      raise Errors::InvalidDirection if @direction != direction
     end
 
   end

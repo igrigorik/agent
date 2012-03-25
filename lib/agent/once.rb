@@ -26,7 +26,7 @@ module Agent
   protected
 
     def error
-      @error ||= Agent::Error.new("already performed")
+      @error ||= Error.new("already performed")
     end
 
   end

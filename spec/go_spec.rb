@@ -12,6 +12,6 @@ describe "Agent.go!" do
   end
 
   it "should raise an error if no block is passed" do
-    lambda{ Agent.go! }.should raise_error(Agent::BlockMissing)
+    lambda{ Agent.go! }.should raise_error(Agent::Errors::BlockMissing)
   end
 end

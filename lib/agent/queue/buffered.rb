@@ -1,14 +1,13 @@
 require "agent/queue"
+require "agent/errors"
 
 module Agent
   class Queue
     class Buffered < Queue
-      class InvalidQueueSize < Exception; end
-
       attr_reader :size, :max
 
       def initialize(max=1)
-        raise InvalidQueueSize, "queue size must be at least 1" unless max >= 1
+        raise Errors::InvalidQueueSize, "queue size must be at least 1" unless max >= 1
         super()
         @max = max
       end
