@@ -79,98 +79,103 @@ The setup:
   1.8 GHz Intel Core i7
   4 GB 1333 MHz DDR3
   SSD
+  Terminal w/ OSX Lion's system ruby by default
 
-The command (except w/ ruby --1.9 for jruby):
-  for i in {0..3};do ruby benchmark/sieve.rb $i; done
+The command:
+  benchmark/multi_ruby_bench.sh
 
 The results:
 
-1. ruby 1.8.7 (2010-01-10 patchlevel 249) [universal-darwin11.0] (OSX Lion's ruby)
+ruby 1.8.7 (2010-01-10 patchlevel 249) [universal-darwin11.0]
 
 150's prime, 5 goroutines, channel buffer size is 0
              user     system      total        real
-receive 28.540000   0.300000  28.840000 ( 28.758503)
+receive 27.100000   0.290000  27.390000 ( 27.324909)
 
 150's prime, 5 goroutines, channel buffer size is 1
              user     system      total        real
-receive 26.630000   0.300000  26.930000 ( 26.868036)
+receive 24.690000   0.280000  24.970000 ( 24.910035)
 
 150's prime, 5 goroutines, channel buffer size is 2
              user     system      total        real
-receive 26.720000   0.300000  27.020000 ( 26.945404)
+receive 24.730000   0.280000  25.010000 ( 24.946830)
 
 150's prime, 5 goroutines, channel buffer size is 3
              user     system      total        real
-receive 26.490000   0.280000  26.770000 ( 26.711857)
+receive 25.010000   0.290000  25.300000 ( 25.238002)
 
-2. ruby 1.9.2p318 (2012-02-14 revision 34678) [x86_64-darwin11.3.0]
+
+ruby 1.9.2p318 (2012-02-14 revision 34678) [x86_64-darwin11.3.0]
 
 150's prime, 5 goroutines, channel buffer size is 0
              user     system      total        real
-receive  6.860000   2.430000   9.290000 (  8.769513)
+receive  5.410000   2.360000   7.770000 (  7.241433)
 
 150's prime, 5 goroutines, channel buffer size is 1
              user     system      total        real
-receive  6.720000   2.130000   8.850000 (  8.397376)
+receive  5.270000   1.980000   7.250000 (  6.817536)
 
 150's prime, 5 goroutines, channel buffer size is 2
              user     system      total        real
-receive  6.870000   2.050000   8.920000 (  8.502869)
+receive  5.330000   2.030000   7.360000 (  6.918912)
 
 150's prime, 5 goroutines, channel buffer size is 3
              user     system      total        real
-receive  6.890000   1.990000   8.880000 (  8.479757)
+receive  5.340000   1.950000   7.290000 (  6.864300)
 
-3. ruby 1.9.3p125 (2012-02-16 revision 34643) [x86_64-darwin11.3.0]
+
+ruby 1.9.3p125 (2012-02-16 revision 34643) [x86_64-darwin11.3.0]
 
 150's prime, 5 goroutines, channel buffer size is 0
               user     system      total        real
-receive   8.120000   5.380000  13.500000 ( 10.565193)
+receive   6.470000   5.220000  11.690000 (  8.803085)
 
 150's prime, 5 goroutines, channel buffer size is 1
               user     system      total        real
-receive   7.810000   4.230000  12.040000 (  9.717816)
+receive   6.390000   4.190000  10.580000 (  8.248593)
 
 150's prime, 5 goroutines, channel buffer size is 2
               user     system      total        real
-receive   7.590000   3.620000  11.210000 (  9.244201)
+receive   6.240000   3.760000  10.000000 (  7.936199)
 
 150's prime, 5 goroutines, channel buffer size is 3
               user     system      total        real
-receive   8.050000   3.510000  11.560000 (  9.661748)
+receive   6.000000   3.200000   9.200000 (  7.461371)
 
-4. jruby 1.6.7 (ruby-1.8.7-p357) (2012-02-22 3e82bc8) (Java HotSpot(TM) 64-Bit Server VM 1.6.0_29) [darwin-x86_64-java]
+
+jruby 1.6.7 (ruby-1.8.7-p357) (2012-02-22 3e82bc8) (Java HotSpot(TM) 64-Bit Server VM 1.6.0_29) [darwin-x86_64-java]
 
 150's prime, 5 goroutines, channel buffer size is 0
              user     system      total        real
-receive 10.538000   0.000000  10.538000 ( 10.508000)
+receive  9.672000   0.000000   9.672000 (  9.637000)
 
 150's prime, 5 goroutines, channel buffer size is 1
              user     system      total        real
-receive  9.901000   0.000000   9.901000 (  9.866000)
+receive 12.528000   0.000000  12.528000 ( 12.494000)
 
 150's prime, 5 goroutines, channel buffer size is 2
              user     system      total        real
-receive  9.468000   0.000000   9.468000 (  9.434000)
+receive 13.191000   0.000000  13.191000 ( 13.150000)
 
 150's prime, 5 goroutines, channel buffer size is 3
              user     system      total        real
-receive 11.278000   0.000000  11.278000 ( 11.242000)
+receive 14.702000   0.000000  14.702000 ( 14.668000)
 
-5. jruby 1.6.7 (ruby-1.9.2-p312) (2012-02-22 3e82bc8) (Java HotSpot(TM) 64-Bit Server VM 1.6.0_29) [darwin-x86_64-java]
+
+jruby 1.6.7 (ruby-1.8.7-p357) (2012-02-22 3e82bc8) (Java HotSpot(TM) 64-Bit Server VM 1.6.0_29) [darwin-x86_64-java]
 
 150's prime, 5 goroutines, channel buffer size is 0
              user     system      total        real
-receive 10.986000   0.000000  10.986000 ( 10.986000)
+receive  9.869000   0.000000   9.869000 (  9.836000)
 
 150's prime, 5 goroutines, channel buffer size is 1
              user     system      total        real
-receive 10.965000   0.000000  10.965000 ( 10.965000)
+receive 12.399000   0.000000  12.399000 ( 12.362000)
 
 150's prime, 5 goroutines, channel buffer size is 2
              user     system      total        real
-receive 12.303000   0.000000  12.303000 ( 12.304000)
+receive 13.146000   0.000000  13.146000 ( 13.154000)
 
 150's prime, 5 goroutines, channel buffer size is 3
              user     system      total        real
-receive 11.299000   0.000000  11.299000 ( 11.299000)
+receive 13.888000   0.000000  13.888000 ( 13.847000)
