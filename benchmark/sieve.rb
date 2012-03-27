@@ -179,3 +179,41 @@ receive 13.146000   0.000000  13.146000 ( 13.154000)
 150's prime, 5 goroutines, channel buffer size is 3
              user     system      total        real
 receive 13.888000   0.000000  13.888000 ( 13.847000)
+
+
+rubinius 1.2.4 (1.8.7 release 2011-07-05 JI) [x86_64-apple-darwin11.3.0]
+
+150's prime, 5 goroutines, channel buffer size is 0
+             user     system      total        real
+receive 20.890472   3.099183  23.989655 ( 19.765032)
+
+150's prime, 5 goroutines, channel buffer size is 1
+             user     system      total        real
+receive 21.727269   3.028753  24.756022 ( 20.554911)
+
+150's prime, 5 goroutines, channel buffer size is 2
+             user     system      total        real
+receive 45.912357   5.814811  51.727168 ( 44.636344)
+
+150's prime, 5 goroutines, channel buffer size is 3
+             user     system      total        real
+receive 46.211119   7.487593  53.698712 ( 44.716384)
+
+
+rubinius 2.0.0dev (1.8.7 65c6146e yyyy-mm-dd JI) [x86_64-apple-darwin11.3.0]
+
+150's prime, 5 goroutines, channel buffer size is 0
+             user     system      total        real
+receive 62.980970   4.578037  67.559007 ( 18.560938)
+
+150's prime, 5 goroutines, channel buffer size is 1
+             user     system      total        real
+receive 52.822284   4.667321  57.489605 ( 15.986046)
+
+150's prime, 5 goroutines, channel buffer size is 2
+             user     system      total        real
+receive 54.217875   4.579821  58.797696 ( 16.267339)
+
+150's prime, 5 goroutines, channel buffer size is 3
+             user     system      total        real
+receive 59.092219   4.881411  63.973630 ( 17.664269)

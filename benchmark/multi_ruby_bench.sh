@@ -58,3 +58,21 @@ ruby benchmark/sieve.rb 0
 ruby benchmark/sieve.rb 1
 ruby benchmark/sieve.rb 2
 ruby benchmark/sieve.rb 3
+echo
+rvm use rbx-1.2.4
+echo
+echo `ruby -v`
+echo
+ruby benchmark/sieve.rb 0
+ruby benchmark/sieve.rb 1
+ruby benchmark/sieve.rb 2
+ruby benchmark/sieve.rb 3
+echo
+rvm use rbx-2.0.testing
+echo
+echo `ruby -v`
+echo
+ruby benchmark/sieve.rb 0
+ruby benchmark/sieve.rb 1
+ruby benchmark/sieve.rb 2
+ruby benchmark/sieve.rb 3
