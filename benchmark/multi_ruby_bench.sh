@@ -24,6 +24,15 @@ ruby benchmark/sieve.rb 1
 ruby benchmark/sieve.rb 2
 ruby benchmark/sieve.rb 3
 echo
+rvm use 1.8.7
+echo
+echo `ruby -v`
+echo
+ruby benchmark/sieve.rb 0
+ruby benchmark/sieve.rb 1
+ruby benchmark/sieve.rb 2
+ruby benchmark/sieve.rb 3
+echo
 rvm use 1.9.2
 echo
 echo `ruby -v`

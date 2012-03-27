@@ -105,6 +105,25 @@ receive 24.730000   0.280000  25.010000 ( 24.946830)
 receive 25.010000   0.290000  25.300000 ( 25.238002)
 
 
+ruby 1.8.7 (2012-02-08 patchlevel 358) [i686-darwin11.3.0]
+
+150's prime, 5 goroutines, channel buffer size is 0
+             user     system      total        real
+receive 17.890000   0.090000  17.980000 ( 17.984755)
+
+150's prime, 5 goroutines, channel buffer size is 1
+             user     system      total        real
+receive 17.030000   0.090000  17.120000 ( 17.131916)
+
+150's prime, 5 goroutines, channel buffer size is 2
+             user     system      total        real
+receive 17.060000   0.090000  17.150000 ( 17.168336)
+
+150's prime, 5 goroutines, channel buffer size is 3
+             user     system      total        real
+receive 17.090000   0.100000  17.190000 ( 17.187443)
+
+
 ruby 1.9.2p318 (2012-02-14 revision 34678) [x86_64-darwin11.3.0]
 
 150's prime, 5 goroutines, channel buffer size is 0
