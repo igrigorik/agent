@@ -1,4 +1,6 @@
-require 'lib/agent'
+project_lib_path = File.expand_path(File.join(File.dirname(__FILE__), "..", "lib"))
+$LOAD_PATH.unshift(project_lib_path)
+require 'agent'
 
 # First, we declare a new Ruby struct, which will encapsulate several arguments, and then
 # declare a clientRequests channel, which will carry our Request struct. Nothing unusual,
@@ -6,7 +8,7 @@ require 'lib/agent'
 # second.
 
 Request = Struct.new(:args, :resultChan)
-clientRequests = Agent::Channel.new(name: :clientRequests, type: Request, size: 2)
+clientRequests = channel!(Request, 2)
 
 # Now, we create a new worker block, which takes in a “reqs” object, calls receive on it
 # (hint, req’s is a Channel!), sleeps for a bit, and then sends back a timestamped
@@ -15,31 +17,35 @@ clientRequests = Agent::Channel.new(name: :clientRequests, type: Request, size: 
 
 worker = Proc.new do |reqs|
   loop do
-    req = reqs.receive
+    req = reqs.receive[0]
     sleep 1.0
     req.resultChan << [Time.now, req.args + 1].join(' : ')
   end
 end
 
 # start two workers
-go(clientRequests, &worker)
-go(clientRequests, &worker)
+go!(clientRequests, &worker)
+go!(clientRequests, &worker)
 
 # The rest is simple, we create two distinct requests, which carry a number and a reply
 # channel, and pass them to our clientRequests pipe, on which our workers are waiting.
 # Once dispatched, we simply call receive and wait for the results!
 
-req1 = Request.new(1, Agent::Channel.new(:name => :resultChan1, :type => String))
-req2 = Request.new(2, Agent::Channel.new(:name => :resultChan2, :type => String))
+req1 = Request.new(1, channel!(String))
+req2 = Request.new(2, channel!(String))
 
 clientRequests << req1
 clientRequests << req2
 
 # retrieve results
-puts req1.resultChan.receive  # => 2010-11-28 23:31:08 -0500 : 2
-puts req2.resultChan.receive  # => 2010-11-28 23:31:08 -0500 : 3
+puts req1.resultChan.receive[0]  # => 2010-11-28 23:31:08 -0500 : 2
+puts req2.resultChan.receive[0]  # => 2010-11-28 23:31:08 -0500 : 3
 
 # Notice something interesting? Both results came back with the same timestamp! Our
 # clientRequests channel allowed for up to two messages in the pipe, which our workers
 # immediately received, executed, and returned the results.  Once again, not a thread
 # or a mutex in sight.
+
+clientRequests.close
+req1.resultChan.close
+req2.resultChan.close

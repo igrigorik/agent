@@ -1,4 +1,4 @@
-require "helper"
+require "spec_helper"
 
 describe "Producer-Consumer" do
   it "should synchronize by communication" do
@@ -32,49 +32,62 @@ describe "Producer-Consumer" do
     #     }
 
     producer = Proc.new do |c, n, s|
+      # print "producer: starting\n"
+
       n.times do |i|
+        # print "producer: #{i+1} of #{n}\n"
         c << i
-        # puts "producer: #{i}"
+        # print "producer sent: #{i}\n"
       end
+
+      # print "producer: finished\n"
 
       s << "producer finished"
     end
 
     consumer = Proc.new do |c, n, s|
+      # print "consumer: starting\n"
       n.times do |i|
+        # print "consumer: #{i+1} of #{n}\n"
         msg = c.receive
-        # puts "consumer got: #{msg}"
+        # print "consumer got: #{msg}\n"
       end
+
+      # print "consumer: finished\n"
 
       s << "consumer finished"
     end
 
-    c = Agent::Channel.new(name: :c, type: Integer)
-    s = Agent::Channel.new(name: :s, type: String)
+    c = channel!(Integer)
+    s = channel!(String)
 
-    go(c, 3, s, &producer)
-    go(c, 3, s, &consumer)
+    go!(c, 3, s, &producer)
+    sleep 0.1
+    go!(c, 3, s, &consumer)
 
-    s.pop.should == "producer finished"
-    s.pop.should == "consumer finished"
+    messages = [s.pop[0], s.pop[0]]
+    messages.should include("producer finished")
+    messages.should include("consumer finished")
 
     c.close
     s.close
   end
 
   it "should work as generator" do
-    producer = Proc.new do |c, i=0|
+    producer = Proc.new do |c|
+      i = 0
       loop { c.pipe << i+= 1 }
     end
 
     Generator = Struct.new(:name, :pipe)
-    c = Agent::Channel.new(name: :incr, type: Integer)
+    c = channel!(Integer)
     g = Generator.new(:incr, c)
 
-    go(g, &producer)
+    go!(g, &producer)
 
-    c.receive.should == 1
-    c.receive.should == 2
-    c.receive.should == 3
+    c.receive[0].should == 1
+    c.receive[0].should == 2
+    c.receive[0].should == 3
+    c.close
   end
 end
