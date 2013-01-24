@@ -37,7 +37,7 @@ module Agent
         raise Errors::ChannelClosed if @closed
 
         if @blocking_once
-          value, error = @blocking_once.perform do
+          _, error = @blocking_once.perform do
             yield @object
             @sent = true
             @cvar.signal
