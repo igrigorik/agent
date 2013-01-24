@@ -29,6 +29,7 @@ module Agent
       @operations    = {}
       @blocking_once = BlockingOnce.new
       @notifier      = Notifier.new
+      @default_case  = nil
     end
 
     def default(&blk)
