@@ -1,4 +1,3 @@
-require "agent/queue"
 require "agent/errors"
 
 module Agent
