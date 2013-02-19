@@ -36,7 +36,7 @@ A "select" statement chooses which of a set of possible communications will proc
 cw = channel!(Integer, 1)
 cr = channel!(Integer, 1)
 
-select do |s|
+select! do |s|
   s.case(cr, :receive) { |value| do_something(value) }
   s.case(cw, :send, 3)
 end
@@ -47,7 +47,7 @@ In example above, cr is currently unavailable to read from (since its empty), bu
 ```ruby
 cr = channel!(Integer, 1)
 
-select do |s|
+select! do |s|
   s.case(cr, :receive) { |value| do_something(value) }
   s.default            { puts :default }
 end
@@ -58,7 +58,7 @@ In this example, cr is unavailable for read (since its empty), but we also provi
 ```ruby
 cr = channel!(Integer, 1)
 
-select do |s|
+select! do |s|
   s.case(cr, :receive) { |value| do_something(value) }
   s.timeout(1.0)       { puts :timeout }
 end
