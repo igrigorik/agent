@@ -10,5 +10,6 @@ module Agent
     class NotImplementedError < Exception; end
     class DefaultCaseAlreadyDefinedError < Exception; end
     class NegativeWaitGroupCount < Exception; end
+    class AlreadySelectedError < Exception; end
   end
 end

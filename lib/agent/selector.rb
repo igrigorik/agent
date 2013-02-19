@@ -11,11 +11,6 @@ module Agent
     selector = Selector.new
     yield selector
     selector.select
-  ensure
-    if selector
-      selector.close_default_channel
-      selector.dequeue_operations
-    end
   end
 
   class Selector
@@ -30,6 +25,7 @@ module Agent
       @blocking_once = BlockingOnce.new
       @notifier      = Notifier.new
       @default_case  = nil
+      @selected      = false
     end
 
     def default(&blk)
@@ -54,6 +50,8 @@ module Agent
     end
 
     def select
+      raise Errors::AlreadySelectedError if @selected
+
       if !@ordered_cases.empty?
         @ordered_cases.each do |cse|
           if cse.direction == :send
@@ -77,7 +75,14 @@ module Agent
 
         execute_case(@notifier.payload)
       end
+    ensure
+      @selected = true
+      close_default_channel
+      dequeue_operations
     end
+
+
+  protected
 
     def dequeue_operations
       @operations.each do |channel, operations|
@@ -88,9 +93,6 @@ module Agent
     def close_default_channel
       @default_case.channel.close if @default_case
     end
-
-
-  protected
 
     def add_case(chan, direction, value=nil, &blk)
       uuid = UUID.generate
