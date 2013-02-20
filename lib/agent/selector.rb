@@ -44,7 +44,6 @@ module Agent
 
     def case(chan, direction, value=nil, &blk)
       raise "invalid case, must be a channel" unless chan.is_a?(Channel)
-      raise Errors::BlockMissing if blk.nil? && direction == :receive
       raise Errors::InvalidDirection if direction != :send && direction != :receive
       add_case(chan, direction, value, &blk)
     end

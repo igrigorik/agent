@@ -27,6 +27,23 @@ describe Agent::Selector do
     (Time.now.to_f - now).should be_within(0.05).of(0.1)
   end
 
+  it "should not raise an error when a block is missing on default" do
+    lambda {
+      select! do |s|
+        s.default
+      end
+    }.should_not raise_error(Agent::Errors::BlockMissing)
+  end
+
+  it "should not raise an error when a block is missing on timeout" do
+    lambda {
+      select! do |s|
+        s.timeout(1)
+        s.default
+      end
+    }.should_not raise_error(Agent::Errors::BlockMissing)
+  end
+
   context "with unbuffered channels" do
     before do
       @c = channel!(Integer)
@@ -38,28 +55,27 @@ describe Agent::Selector do
 
     it "should evaluate select statements top to bottom" do
       select! do |s|
-        s.case(@c, :send, 1) {}
-        s.case(@c, :receive) {}
-        s.default {}
+        s.case(@c, :send, 1)
+        s.case(@c, :receive)
+        s.default
         s.cases.size.should == 3
       end
     end
 
-    it "should raise an error when a block is missing on receive" do
+    it "should not raise an error when a block is missing on receive" do
       lambda {
         select! do |s|
           s.case(@c, :receive)
+          s.default
         end
-      }.should raise_error(Agent::Errors::BlockMissing)
+      }.should_not raise_error(Agent::Errors::BlockMissing)
     end
 
     it "should not raise an error when a block is missing on send" do
       lambda {
-        go!{ @c.receive }
-
         select! do |s|
           s.case(@c, :send, 1)
-          s.cases.size.should == 0
+          s.default
         end
       }.should_not raise_error(Agent::Errors::BlockMissing)
     end
@@ -98,7 +114,7 @@ describe Agent::Selector do
       lambda {
         select! do |s|
           s.case(@c, :send, 1)
-          s.case(@c, :receive){}
+          s.case(@c, :receive)
         end
       }.should raise_error(Agent::Errors::ChannelClosed)
     end
@@ -168,7 +184,7 @@ describe Agent::Selector do
         go!{sleep(0.2); c.receive[0].should == 2 }
 
         select! do |s|
-          s.case(c, :send, 2) {}
+          s.case(c, :send, 2)
         end
 
         (Time.now.to_f - now).should be_within(0.1).of(0.2)
@@ -223,26 +239,26 @@ describe Agent::Selector do
 
     it "should evaluate select statements top to bottom" do
       select! do |s|
-        s.case(@c, :send, 1) {}
-        s.case(@c, :receive) {}
+        s.case(@c, :send, 1)
+        s.case(@c, :receive)
         s.cases.size.should == 2
       end
     end
 
-    it "should raise an error when a block is missing on receive" do
+    it "should not raise an error when a block is missing on receive" do
       lambda {
         select! do |s|
           s.case(@c, :receive)
-          s.cases.size.should == 0
+          s.default
         end
-      }.should raise_error(Agent::Errors::BlockMissing)
+      }.should_not raise_error(Agent::Errors::BlockMissing)
     end
 
     it "should not raise an error when a block is missing on send" do
       lambda {
         select! do |s|
           s.case(@c, :send, 1)
-          s.cases.size.should == 0
+          s.default
         end
       }.should_not raise_error(Agent::Errors::BlockMissing)
     end
@@ -283,7 +299,7 @@ describe Agent::Selector do
       lambda {
         select! do |s|
           s.case(@c, :send, 1)
-          s.case(@c, :send, 2){}
+          s.case(@c, :send, 2)
         end
       }.should raise_error(Agent::Errors::ChannelClosed)
     end
@@ -348,7 +364,7 @@ describe Agent::Selector do
         go!{sleep(0.2); c.receive }
 
         select! do |s|
-          s.case(c, :send, 2) {}
+          s.case(c, :send, 2)
         end
 
         c.receive[0].should == 2

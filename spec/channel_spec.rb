@@ -48,7 +48,7 @@ describe Agent::Channel do
       # timeout blocking receive calls
       timed_out = false
       select! do |s|
-        s.case(c, :receive){}
+        s.case(c, :receive)
         s.timeout(0.1){ timed_out = true }
       end
       timed_out.should == true
