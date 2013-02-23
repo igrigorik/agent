@@ -1,4 +1,4 @@
-# Agent
+# Agent [![Build Status](https://travis-ci.org/igrigorik/agent.png)](https://travis-ci.org/igrigorik/agent)
 
 Agent is an attempt at [Go-like (CSP / pi-calculus) concurrency in Ruby](http://www.igvita.com/2010/12/02/concurrency-with-actors-goroutines-ruby/), but with an additional twist. It is a collection of different [process calculi](http://en.wikipedia.org/wiki/Process_calculus) primitives and patterns, with no specific, idiomatic affiliation to any specific implementation. A few available patterns so far:
 
