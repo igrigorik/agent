@@ -3,7 +3,7 @@
 Agent is an attempt at [Go-like (CSP / pi-calculus) concurrency in Ruby](http://www.igvita.com/2010/12/02/concurrency-with-actors-goroutines-ruby/), but with an additional twist. It is a collection of different [process calculi](http://en.wikipedia.org/wiki/Process_calculus) primitives and patterns, with no specific, idiomatic affiliation to any specific implementation. A few available patterns so far:
 
  - Goroutines on top of green Ruby threads
- - Named, Typed, Bufferd and Unbufferred in-memory "channels"
+ - Named, Typed, Buffered and Unbufferred in-memory "channels"
  - Selectable "channels"
 
 This gem is a work in progress, so treat it as such.
