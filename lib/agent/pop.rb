@@ -34,11 +34,9 @@ module Agent
 
     def send
       @mutex.synchronize do
-        raise Errors::ChannelClosed if @closed
-
         if @blocking_once
           _, error = @blocking_once.perform do
-            @object = Marshal.load(yield)
+            @object = Marshal.load(yield) unless @closed
             @received = true
             @cvar.signal
             @notifier.notify(self) if @notifier
@@ -47,7 +45,7 @@ module Agent
           return error
         else
           begin
-            @object = Marshal.load(yield)
+            @object = Marshal.load(yield) unless @closed
             @received = true
             @cvar.signal
             @notifier.notify(self) if @notifier

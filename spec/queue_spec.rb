@@ -158,11 +158,20 @@ describe Agent::Queue do
         @queue.queue.size.should == 0
       end
 
-      it "should raise an error when being acted upon afterwards" do
-        @queue.close
-        lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
-        lambda{ @queue.push("1") }.should raise_error(Agent::Errors::ChannelClosed)
-        lambda{ @queue.pop }.should raise_error(Agent::Errors::ChannelClosed)
+      context "after it is closed" do
+        before{ @queue.close }
+
+        it "should raise an error when #close is called again" do
+          lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
+        end
+
+        it "should raise an error when a value is pushed onto the queue" do
+          lambda{ @queue.push("1") }.should raise_error(Agent::Errors::ChannelClosed)
+        end
+
+        it "should return [nil, false] when popping from the queue" do
+          @queue.pop.should == [nil, false]
+        end
       end
     end
 
@@ -322,11 +331,20 @@ describe Agent::Queue do
         @queue.pushes.size.should == 0
       end
 
-      it "should raise an error when being acted upon afterwards" do
-        @queue.close
-        lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
-        lambda{ @queue.push("1") }.should raise_error(Agent::Errors::ChannelClosed)
-        lambda{ @queue.pop }.should raise_error(Agent::Errors::ChannelClosed)
+      context "after it is closed" do
+        before{ @queue.close }
+
+        it "should raise an error when #close is called again" do
+          lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
+        end
+
+        it "should raise an error when a value is pushed onto the queue" do
+          lambda{ @queue.push("1") }.should raise_error(Agent::Errors::ChannelClosed)
+        end
+
+        it "should return [nil, false] when popping from the queue" do
+          @queue.pop.should == [nil, false]
+        end
       end
     end
 

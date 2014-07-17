@@ -82,7 +82,7 @@ module Agent
       pop = Pop.new(options)
 
       mutex.synchronize do
-        raise Errors::ChannelClosed if @closed
+        pop.close if @closed
         operations << pop
         pops << pop
         process

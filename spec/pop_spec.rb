@@ -41,10 +41,22 @@ describe Agent::Pop do
       (Time.now - s).should be_within(0.01).of(0)
     end
 
-    it "be able to be gracefully rolled back" do
+    it "should be able to be gracefully rolled back" do
       @pop.should_not be_received
       @pop.send{ raise Agent::Errors::Rollback }
       @pop.should_not be_received
+    end
+
+    it "should continue when it was already closed" do
+      @pop.close
+
+      go!{ @pop.wait; @ack.send(Time.now) }
+
+      sleep 0.2
+
+      s, _ = @ack.receive
+
+      (Time.now - s).should be_within(0.01).of(0.2)
     end
   end
 
@@ -59,6 +71,7 @@ describe Agent::Pop do
       @pop.send{Marshal.dump(1)}
       @pop.should be_received
       @blocking_once.should be_performed
+      @pop.object.should == 1
 
       @pop.send{Marshal.dump(2)}
       @pop.object.should == 1
@@ -72,6 +85,20 @@ describe Agent::Pop do
       @pop.send{ raise Agent::Errors::Rollback }
       @blocking_once.should_not be_performed
       @pop.should_not be_received
+    end
+
+    it "should send only once even when it is closed" do
+      @pop.close
+      @blocking_once.should_not be_performed
+      @pop.send{Marshal.dump(1)}
+      @pop.should be_received
+      @blocking_once.should be_performed
+      @pop.object.should == nil
+
+      @pop.send{Marshal.dump(2)}
+      @pop.object.should == nil
+
+      lambda{@pop.send{raise "an error"} }.should_not raise_error
     end
   end
 
