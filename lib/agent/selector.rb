@@ -103,7 +103,7 @@ module Agent
     end
 
     def execute_case(operation)
-      raise Errors::ChannelClosed if operation.closed?
+      raise Errors::ChannelClosed if operation.closed? && operation.is_a?(Agent::Push)
 
       cse = @cases[operation.uuid]
       blk, direction = cse.blk, cse.direction
