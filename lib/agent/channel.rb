@@ -10,7 +10,7 @@ module Agent
   end
 
   class Channel
-    attr_reader :name, :direction, :type, :max
+    attr_reader :name, :direction, :type, :max, :queue
 
     def initialize(*args)
       opts         = args.last.is_a?(Hash) ? args.pop : {}
@@ -21,12 +21,6 @@ module Agent
       @direction   = opts[:direction] || :bidirectional
       @close_mutex = Mutex.new
       @queue       = Queues.register(@name, @type, @max)
-    end
-
-    def queue
-      q = @queue
-      raise Errors::ChannelClosed unless q
-      q
     end
 
 
@@ -48,7 +42,9 @@ module Agent
 
     def send(object, options={})
       check_direction(:send)
-      queue.push(object, options)
+      q = queue
+      raise Errors::ChannelClosed unless q
+      q.push(object, options)
     end
     alias :push :send
     alias :<<   :send
@@ -61,7 +57,9 @@ module Agent
 
     def receive(options={})
       check_direction(:receive)
-      queue.pop(options)
+      q = queue
+      return [nil, false] unless q
+      q.pop(options)
     end
     alias :pop  :receive
 

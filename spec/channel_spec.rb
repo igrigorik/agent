@@ -109,9 +109,9 @@ describe Agent::Channel do
       lambda { @c.send("a") }.should raise_error(Agent::Errors::ChannelClosed)
     end
 
-    it "should raise an error when receiving from a channel that has already been closed" do
+    it "should return [nil, false] when receiving from a channel that has already been closed" do
       @c.close
-      lambda { @c.receive }.should raise_error(Agent::Errors::ChannelClosed)
+      @c.receive.should == [nil, false]
     end
   end
 
