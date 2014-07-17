@@ -14,6 +14,7 @@ RSpec.configure do |config|
   config.filter_run :focus
 
   config.filter_run_excluding :vm => lambda { |version|
-    !(Config::CONFIG['ruby_install_name'] =~ /^#{version.to_s}/)
+    c = defined?(RbConfig) ? RbConfig : Config
+    !(c::CONFIG['ruby_install_name'] =~ /^#{version.to_s}/)
   }
 end
