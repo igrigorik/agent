@@ -5,7 +5,7 @@ module Agent
     attr_reader :object, :uuid, :blocking_once, :notifier
 
     def initialize(object, options={})
-      @object        = Marshal.dump(object)
+      @object        = Marshal.load(Marshal.dump(object))
       @uuid          = options[:uuid] || UUID.generate
       @blocking_once = options[:blocking_once]
       @notifier      = options[:notifier]
