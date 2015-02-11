@@ -47,7 +47,7 @@ module Agent
       check_direction(:send)
       q = queue
       raise Errors::ChannelClosed unless q
-      q.push(object, {skip_marshal: @skip_marshal}.merge(options))
+      q.push(object, {:skip_marshal => @skip_marshal}.merge(options))
     end
     alias :push :send
     alias :<<   :send
