@@ -21,7 +21,7 @@ module Agent
       @closed       = false
       @name         = opts[:name] || UUID.generate
       @direction    = opts[:direction] || :bidirectional
-      @skip_marshal = opts[:skip_marshal] || false
+      @skip_marshal = opts[:skip_marshal]
       @close_mutex  = Mutex.new
       @queue        = Queues.register(@name, @type, @max)
     end
