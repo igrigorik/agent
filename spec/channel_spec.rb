@@ -213,4 +213,28 @@ describe Agent::Channel do
     end
   end
 
+  context "marshaling" do
+    it "marshals data by default" do
+      c = channel!(String, 1)
+      string = "foo"
+      c.send(string)
+      string_copy = c.receive[0]
+      string_copy.should == string
+      string_copy.object_id.should_not == string.object_id
+    end
+
+    it "skips marshaling when configured to" do
+      c = channel!(String, 1, :skip_marshal => true)
+      string = "foo"
+      c.send(string)
+      c.receive[0].object_id.should == string.object_id
+    end
+
+    it "skips marshaling for channels by default" do
+      c = channel!(Agent::Channel, 1)
+      c.send(c)
+      c.receive[0].object_id.should == c.object_id
+    end
+  end
 end
+

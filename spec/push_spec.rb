@@ -44,6 +44,35 @@ describe Agent::Push do
     end
   end
 
+  context "marshaling" do
+    let(:object){ "foo" }
+    let(:skip_marshal){ false }
+    let(:push){ Agent::Push.new(object, :skip_marshal => skip_marshal) }
+
+    it "makes a copy of the object" do
+      push.object.should == object
+      push.object.object_id.should_not == object.object_id
+    end
+
+    context "with an object type that skips marshaling" do
+      let(:object){ ::Queue.new }
+
+      it "does not make a copy of the object" do
+        push.object.should == object
+        push.object.object_id.should == object.object_id
+      end
+    end
+
+    context "when skip_marshal is true" do
+      let(:skip_marshal){ true }
+
+      it "does not make a copy of the object" do
+        push.object.should == object
+        push.object.object_id.should == object.object_id
+      end
+    end
+  end
+
   context "with a blocking_once" do
     before do
       @blocking_once = Agent::BlockingOnce.new
