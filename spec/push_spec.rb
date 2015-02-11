@@ -29,7 +29,7 @@ describe Agent::Push do
 
       s, _ = @ack.receive
 
-      (Time.now - s).should be_within(0.01).of(0)
+      (Time.now - s).should be_within(0.02).of(0)
     end
 
     it "should raise an error on the waiter when closed" do
