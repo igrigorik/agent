@@ -2,10 +2,35 @@ require "agent/errors"
 
 module Agent
   class Push
+    SKIP_MARSHAL_TYPES = [
+      ::Symbol,
+      ::Numeric,
+      ::NilClass,
+      ::TrueClass,
+      ::FalseClass,
+      ::Queue,
+      ::SizedQueue,
+      ::Thread,
+      ::Mutex,
+      ::Module,
+      ::IO,
+      ::Proc,
+      ::Method
+    ]
+
     attr_reader :object, :uuid, :blocking_once, :notifier
 
     def initialize(object, options={})
-      @object        = Marshal.load(Marshal.dump(object))
+      @object = case object
+                when *SKIP_MARSHAL_TYPES
+                  object
+                else
+                  if options[:skip_marshal]
+                    object
+                  else
+                    Marshal.load(Marshal.dump(object))
+                  end
+                end
       @uuid          = options[:uuid] || UUID.generate
       @blocking_once = options[:blocking_once]
       @notifier      = options[:notifier]

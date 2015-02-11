@@ -10,17 +10,20 @@ module Agent
   end
 
   class Channel
+    ::Agent::Push::SKIP_MARSHAL_TYPES << ::Agent::Channel
+
     attr_reader :name, :direction, :type, :max, :queue
 
     def initialize(*args)
-      opts         = args.last.is_a?(Hash) ? args.pop : {}
-      @type        = args.shift
-      @max         = args.shift  || 0
-      @closed      = false
-      @name        = opts[:name] || UUID.generate
-      @direction   = opts[:direction] || :bidirectional
-      @close_mutex = Mutex.new
-      @queue       = Queues.register(@name, @type, @max)
+      opts          = args.last.is_a?(Hash) ? args.pop : {}
+      @type         = args.shift
+      @max          = args.shift  || 0
+      @closed       = false
+      @name         = opts[:name] || UUID.generate
+      @direction    = opts[:direction] || :bidirectional
+      @skip_marshal = opts[:skip_marshal] || false
+      @close_mutex  = Mutex.new
+      @queue        = Queues.register(@name, @type, @max)
     end
 
 
@@ -44,7 +47,7 @@ module Agent
       check_direction(:send)
       q = queue
       raise Errors::ChannelClosed unless q
-      q.push(object, options)
+      q.push(object, {skip_marshal: @skip_marshal}.merge(options))
     end
     alias :push :send
     alias :<<   :send
