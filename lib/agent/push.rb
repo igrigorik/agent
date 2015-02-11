@@ -12,6 +12,7 @@ module Agent
       ::SizedQueue,
       ::Thread,
       ::Mutex,
+      ::Monitor,
       ::Module,
       ::IO,
       ::Proc,
