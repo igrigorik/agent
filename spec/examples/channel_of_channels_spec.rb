@@ -10,7 +10,7 @@ describe "Channel of Channels" do
         res = Request.new(n, channel!(Integer))
 
         reqs << res
-        res.resultChan.receive[0].should == n+1
+        expect(res.resultChan.receive[0]).to eq(n+1)
         res.resultChan.close
       end
     end
@@ -52,7 +52,7 @@ describe "Channel of Channels" do
         res = Request.new(n, channel!(Integer))
 
         reqs << res
-        res.resultChan.receive[0].should == n+1
+        expect(res.resultChan.receive[0]).to eq(n+1)
         res.resultChan.close
       end
     end

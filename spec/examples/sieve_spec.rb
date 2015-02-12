@@ -69,7 +69,7 @@ describe "sieve of Eratosthenes" do
       end
     end
 
-    result.should == [2,3,5,7,11,13,17,19]
+    expect(result).to eq([2,3,5,7,11,13,17,19])
     channels.each(&:close)
   end
 
@@ -143,7 +143,7 @@ describe "sieve of Eratosthenes" do
       end
     end
 
-    result.should == [2,3,5,7,11,13,17,19]
+    expect(result).to eq([2,3,5,7,11,13,17,19])
     channels.each(&:close)
   end
 end

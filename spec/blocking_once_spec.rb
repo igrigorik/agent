@@ -13,8 +13,8 @@ describe Agent::BlockingOnce do
       r << 1
     end
 
-    r.size.should == 1
-    r.first.should == 1
+    expect(r.size).to eq(1)
+    expect(r.first).to eq(1)
   end
 
   it "should only execute the first block passed to it" do
@@ -28,8 +28,8 @@ describe Agent::BlockingOnce do
       r << 2
     end
 
-    r.size.should == 1
-    r.first.should == 1
+    expect(r.size).to eq(1)
+    expect(r.first).to eq(1)
   end
 
   it "should return the value returned from the block" do
@@ -37,18 +37,18 @@ describe Agent::BlockingOnce do
       1
     end
 
-    value.should == 1
+    expect(value).to eq(1)
   end
 
   it "should return nil for value and an error if it has already been used" do
     value, error = @blocking_once.perform{ 1 }
-    value.should == 1
-    error.should be_nil
+    expect(value).to eq(1)
+    expect(error).to be_nil
 
     value, error = @blocking_once.perform{ 2 }
-    value.should be_nil
-    error.should_not be_nil
-    error.should be_message("already performed")
+    expect(value).to be_nil
+    expect(error).not_to be_nil
+    expect(error).to be_message("already performed")
   end
 
   it "should roll back and allow the block to be executed again" do
@@ -78,7 +78,7 @@ describe Agent::BlockingOnce do
     finished_channel.close
 
     # Three sleeps at 0.1 == 0.3, so if it's less than 0.3...
-    (Time.now.to_f - s).should < 0.3
+    expect(Time.now.to_f - s).to be < 0.3
   end
 
   it "should have minimal contention between threads when they contend for position" do
@@ -111,9 +111,9 @@ describe Agent::BlockingOnce do
     # wait for the finished channel to be completed
     2.times{ finished_channel.receive }
 
-    r.size.should == 1
+    expect(r.size).to eq(1)
     # Onlt the first sleep should be performed, so things should quickly
-    (Time.now.to_f - s).should be_within(0.05).of(0.15)
+    expect(Time.now.to_f - s).to be_within(0.05).of(0.15)
 
     waiting_channel.close
     finished_channel.close

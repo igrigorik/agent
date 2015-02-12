@@ -7,14 +7,14 @@ describe Agent::Selector do
   #   - http://golang.org/doc/go_spec.html#Select_statements
 
   it "should yield Selector on select call" do
-    select! {|s| s.should be_kind_of Agent::Selector}
+    select! {|s| expect(s).to be_kind_of Agent::Selector}
   end
 
   it "should return immediately on empty select block" do
     s = Time.now.to_f
     select! {}
 
-    (Time.now.to_f - s).should be_within(0.05).of(0)
+    expect(Time.now.to_f - s).to be_within(0.05).of(0)
   end
 
   it "should timeout select statement" do
@@ -23,25 +23,25 @@ describe Agent::Selector do
       s.timeout(0.1) { r.push :timeout }
     end
 
-    r.first.should == :timeout
-    (Time.now.to_f - now).should be_within(0.05).of(0.1)
+    expect(r.first).to eq(:timeout)
+    expect(Time.now.to_f - now).to be_within(0.05).of(0.1)
   end
 
   it "should not raise an error when a block is missing on default" do
-    lambda {
+    expect {
       select! do |s|
         s.default
       end
-    }.should_not raise_error(Agent::Errors::BlockMissing)
+    }.not_to raise_error
   end
 
   it "should not raise an error when a block is missing on timeout" do
-    lambda {
+    expect {
       select! do |s|
         s.timeout(1)
         s.default
       end
-    }.should_not raise_error(Agent::Errors::BlockMissing)
+    }.not_to raise_error
   end
 
   context "with unbuffered channels" do
@@ -58,26 +58,26 @@ describe Agent::Selector do
         s.case(@c, :send, 1)
         s.case(@c, :receive)
         s.default
-        s.cases.size.should == 3
+        expect(s.cases.size).to eq(3)
       end
     end
 
     it "should not raise an error when a block is missing on receive" do
-      lambda {
+      expect {
         select! do |s|
           s.case(@c, :receive)
           s.default
         end
-      }.should_not raise_error(Agent::Errors::BlockMissing)
+      }.not_to raise_error
     end
 
     it "should not raise an error when a block is missing on send" do
-      lambda {
+      expect {
         select! do |s|
           s.case(@c, :send, 1)
           s.default
         end
-      }.should_not raise_error(Agent::Errors::BlockMissing)
+      }.not_to raise_error
     end
 
     it "should scan all cases to identify available actions and execute first available one" do
@@ -92,8 +92,8 @@ describe Agent::Selector do
         s.case(@c, :receive) { r.push 3 }
       end
 
-      r.size.should == 1
-      r.first.should == 2
+      expect(r.size).to eq(1)
+      expect(r.first).to eq(2)
     end
 
     it "should evaluate default case immediately if no other cases match" do
@@ -104,28 +104,28 @@ describe Agent::Selector do
         s.default { r.push :default }
       end
 
-      r.size.should == 1
-      r.first.should == :default
+      expect(r.size).to eq(1)
+      expect(r.first).to eq(:default)
     end
 
     it "should raise an error if the channel is closed out from under it and you are sending to it" do
       go!{ sleep 0.25; @c.close }
 
-      lambda {
+      expect {
         select! do |s|
           s.case(@c, :send, 1)
         end
-      }.should raise_error(Agent::Errors::ChannelClosed)
+      }.to raise_error(Agent::Errors::ChannelClosed)
     end
 
     it "should not raise an error if the channel is closed out from under it and you are receiving from it" do
       go!{ sleep 0.25; @c.close }
 
-      lambda {
+      expect {
         select! do |s|
           s.case(@c, :receive){}
         end
-      }.should_not raise_error
+      }.not_to raise_error
     end
 
     context "select immediately available channel" do
@@ -142,8 +142,8 @@ describe Agent::Selector do
           s.default { r.push :empty }
         end
 
-        r.size.should == 1
-        r.first.should == :receive
+        expect(r.size).to eq(1)
+        expect(r.first).to eq(:receive)
         c.close
       end
 
@@ -161,8 +161,8 @@ describe Agent::Selector do
           s.default { r.push :empty }
         end
 
-        r.size.should == 1
-        r.first.should == :send
+        expect(r.size).to eq(1)
+        expect(r.first).to eq(:send)
         c.close
       end
     end
@@ -180,8 +180,8 @@ describe Agent::Selector do
           s.case(c, :receive) {|value| r.push value }
         end
 
-        r.size.should == 1
-        (Time.now.to_f - now).should be_within(0.1).of(0.2)
+        expect(r.size).to eq(1)
+        expect(Time.now.to_f - now).to be_within(0.1).of(0.2)
         c.close
       end
 
@@ -190,13 +190,13 @@ describe Agent::Selector do
 
         # brittle.. counting on select to execute within 0.5s
         now = Time.now.to_f
-        go!{sleep(0.2); c.receive[0].should == 2 }
+        go!{sleep(0.2); expect(c.receive[0]).to eq(2 )}
 
         select! do |s|
           s.case(c, :send, 2)
         end
 
-        (Time.now.to_f - now).should be_within(0.1).of(0.2)
+        expect(Time.now.to_f - now).to be_within(0.1).of(0.2)
         c.close
       end
 
@@ -224,13 +224,13 @@ describe Agent::Selector do
 
         ack.receive
 
-        res.size.should == 1
-        res.first.should == 3
+        expect(res.size).to eq(1)
+        expect(res.first).to eq(3)
 
         # 0.3s goroutine should eventually fire
-        cr.receive[0].should == 2
+        expect(cr.receive[0]).to eq(2)
 
-        (Time.now.to_f - now).should be_within(0.05).of(0.3)
+        expect(Time.now.to_f - now).to be_within(0.05).of(0.3)
         cw.close
         cr.close
       end
@@ -250,26 +250,26 @@ describe Agent::Selector do
       select! do |s|
         s.case(@c, :send, 1)
         s.case(@c, :receive)
-        s.cases.size.should == 2
+        expect(s.cases.size).to eq(2)
       end
     end
 
     it "should not raise an error when a block is missing on receive" do
-      lambda {
+      expect {
         select! do |s|
           s.case(@c, :receive)
           s.default
         end
-      }.should_not raise_error(Agent::Errors::BlockMissing)
+      }.not_to raise_error
     end
 
     it "should not raise an error when a block is missing on send" do
-      lambda {
+      expect {
         select! do |s|
           s.case(@c, :send, 1)
           s.default
         end
-      }.should_not raise_error(Agent::Errors::BlockMissing)
+      }.not_to raise_error
     end
 
     it "should scan all cases to identify available actions and execute first available one" do
@@ -282,8 +282,8 @@ describe Agent::Selector do
         s.case(@c, :receive) { r.push 3 }
       end
 
-      r.size.should == 1
-      r.first.should == 2
+      expect(r.size).to eq(1)
+      expect(r.first).to eq(2)
     end
 
     it "should evaluate default case immediately if no other cases match" do
@@ -296,8 +296,8 @@ describe Agent::Selector do
         s.default { r.push :default }
       end
 
-      r.size.should == 1
-      r.first.should == :default
+      expect(r.size).to eq(1)
+      expect(r.first).to eq(:default)
     end
 
     it "should raise an error if the channel is closed out from under it and you are sending to it" do
@@ -305,21 +305,21 @@ describe Agent::Selector do
 
       go!{ sleep 0.25; @c.close }
 
-      lambda {
+      expect {
         select! do |s|
           s.case(@c, :send, 1)
         end
-      }.should raise_error(Agent::Errors::ChannelClosed)
+      }.to raise_error(Agent::Errors::ChannelClosed)
     end
 
     it "should not raise an error if the channel is closed out from under it and you are receiving from it" do
       go!{ sleep 0.25; @c.close }
 
-      lambda {
+      expect {
         select! do |s|
           s.case(@c, :receive){}
         end
-      }.should_not raise_error
+      }.not_to raise_error
     end
 
     context "select immediately available channel" do
@@ -334,8 +334,8 @@ describe Agent::Selector do
           s.default { r.push :empty }
         end
 
-        r.size.should == 1
-        r.first.should == :receive
+        expect(r.size).to eq(1)
+        expect(r.first).to eq(:receive)
         c.close
       end
 
@@ -349,8 +349,8 @@ describe Agent::Selector do
           s.default { r.push :empty }
         end
 
-        r.size.should == 1
-        r.first.should == :send
+        expect(r.size).to eq(1)
+        expect(r.first).to eq(:send)
         c.close
       end
     end
@@ -368,8 +368,8 @@ describe Agent::Selector do
           s.case(c, :receive) {|value| r.push value }
         end
 
-        r.size.should == 1
-        (Time.now.to_f - now).should be_within(0.1).of(0.2)
+        expect(r.size).to eq(1)
+        expect(Time.now.to_f - now).to be_within(0.1).of(0.2)
         c.close
       end
 
@@ -385,8 +385,8 @@ describe Agent::Selector do
           s.case(c, :send, 2)
         end
 
-        c.receive[0].should == 2
-        (Time.now.to_f - now).should be_within(0.1).of(0.2)
+        expect(c.receive[0]).to eq(2)
+        expect(Time.now.to_f - now).to be_within(0.1).of(0.2)
         c.close
       end
 
@@ -416,13 +416,13 @@ describe Agent::Selector do
         ack.receive
 
         # 0.8s goroutine should have consumed the message first
-        res.size.should == 1
-        res.first.should == 1
+        expect(res.size).to eq(1)
+        expect(res.first).to eq(1)
 
         # send case should have fired, and we should have a message
-        cw.receive[0].should == 3
+        expect(cw.receive[0]).to eq(3)
 
-        (Time.now.to_f - now).should be_within(0.1).of(0.2)
+        expect(Time.now.to_f - now).to be_within(0.1).of(0.2)
         cw.close
         cr.close
       end

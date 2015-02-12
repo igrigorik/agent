@@ -9,17 +9,17 @@ describe Agent::Push do
     end
 
     it "should close" do
-      @push.should_not be_closed
+      expect(@push).not_to be_closed
       @push.close
-      @push.should be_closed
+      expect(@push).to be_closed
     end
 
     it "should run multiple times" do
       i = 0
       @push.receive{|v| i += 1 }
-      @push.should be_sent
+      expect(@push).to be_sent
       @push.receive{|v| i += 1 }
-      i.should == 2
+      expect(i).to eq(2)
     end
 
     it "should continue when sent" do
@@ -29,18 +29,18 @@ describe Agent::Push do
 
       s, _ = @ack.receive
 
-      (Time.now - s).should be_within(0.02).of(0)
+      expect(Time.now - s).to be_within(0.02).of(0)
     end
 
     it "should raise an error on the waiter when closed" do
       go!{ sleep 0.1; @push.close }
-      lambda{ @push.wait }.should raise_error(Agent::Errors::ChannelClosed)
+      expect{ @push.wait }.to raise_error(Agent::Errors::ChannelClosed)
     end
 
     it "be able to be gracefully rolled back" do
-      @push.should_not be_sent
+      expect(@push).not_to be_sent
       @push.receive{|v| raise Agent::Errors::Rollback }
-      @push.should_not be_sent
+      expect(@push).not_to be_sent
     end
   end
 
@@ -50,16 +50,16 @@ describe Agent::Push do
     let(:push){ Agent::Push.new(object, :skip_marshal => skip_marshal) }
 
     it "makes a copy of the object" do
-      push.object.should == object
-      push.object.object_id.should_not == object.object_id
+      expect(push.object).to eq(object)
+      expect(push.object.object_id).not_to eq(object.object_id)
     end
 
     context "with an object type that skips marshaling" do
       let(:object){ ::Queue.new }
 
       it "does not make a copy of the object" do
-        push.object.should == object
-        push.object.object_id.should == object.object_id
+        expect(push.object).to eq(object)
+        expect(push.object.object_id).to eq(object.object_id)
       end
     end
 
@@ -67,8 +67,8 @@ describe Agent::Push do
       let(:skip_marshal){ true }
 
       it "does not make a copy of the object" do
-        push.object.should == object
-        push.object.object_id.should == object.object_id
+        expect(push.object).to eq(object)
+        expect(push.object.object_id).to eq(object.object_id)
       end
     end
   end
@@ -82,23 +82,23 @@ describe Agent::Push do
     it "should only send only once" do
       i = 0
 
-      @blocking_once.should_not be_performed
+      expect(@blocking_once).not_to be_performed
       @push.receive{|v| i += 1 }
-      @push.should be_sent
-      @blocking_once.should be_performed
+      expect(@push).to be_sent
+      expect(@blocking_once).to be_performed
 
       @push.receive{|v| i += 1 }
-      i.should == 1
+      expect(i).to eq(1)
 
-      lambda{@push.receive{raise "an error"} }.should_not raise_error
+      expect{@push.receive{raise "an error"} }.not_to raise_error
     end
 
     it "be able to be gracefully rolled back" do
-      @blocking_once.should_not be_performed
-      @push.should_not be_sent
+      expect(@blocking_once).not_to be_performed
+      expect(@push).not_to be_sent
       @push.receive{|v| raise Agent::Errors::Rollback }
-      @blocking_once.should_not be_performed
-      @push.should_not be_sent
+      expect(@blocking_once).not_to be_performed
+      expect(@push).not_to be_sent
     end
   end
 
@@ -109,15 +109,15 @@ describe Agent::Push do
     end
 
     it "should notify when being sent" do
-      @notifier.should_not be_notified
+      expect(@notifier).not_to be_notified
       @push.receive{|v|}
-      @notifier.should be_notified
+      expect(@notifier).to be_notified
     end
 
     it "should notify when being closed" do
-      @notifier.should_not be_notified
+      expect(@notifier).not_to be_notified
       @push.close
-      @notifier.should be_notified
+      expect(@notifier).to be_notified
     end
   end
 

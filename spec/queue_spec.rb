@@ -8,20 +8,20 @@ describe Agent::Queue do
     end
 
     it "should be buffered" do
-      @queue.should be_buffered
+      expect(@queue).to be_buffered
     end
 
     it "should not be unbuffered" do
-      @queue.should_not be_unbuffered
+      expect(@queue).not_to be_unbuffered
     end
 
     it "should raise an error if the queue size is <= 0" do
-      lambda{ Agent::Queue::Buffered.new(String, 0) }.should raise_error(Agent::Errors::InvalidQueueSize)
-      lambda{ Agent::Queue::Buffered.new(String, -1) }.should raise_error(Agent::Errors::InvalidQueueSize)
+      expect{ Agent::Queue::Buffered.new(String, 0) }.to raise_error(Agent::Errors::InvalidQueueSize)
+      expect{ Agent::Queue::Buffered.new(String, -1) }.to raise_error(Agent::Errors::InvalidQueueSize)
     end
 
     it "should raise an erro when an object of an invalid type is pushed" do
-      lambda { @queue.push(1) }.should raise_error(Agent::Errors::InvalidType)
+      expect { @queue.push(1) }.to raise_error(Agent::Errors::InvalidType)
     end
 
     it "should enqueue and dequeue in order" do
@@ -31,16 +31,16 @@ describe Agent::Queue do
 
       20.times do |i|
         o = @queue.pop[0].to_i
-        o.should > previous
+        expect(o).to be > previous
         previous = o
       end
     end
 
     context "when the queue is empty" do
       it "should hold any attempts to pop from it" do
-        @queue.operations.should be_empty
+        expect(@queue.operations).to be_empty
         @queue.pop(:deferred => true)
-        @queue.operations.should_not be_empty
+        expect(@queue.operations).not_to be_empty
       end
 
       it "should be able to be pushed to" do
@@ -48,17 +48,17 @@ describe Agent::Queue do
       end
 
       it "should increase in size when pushed to" do
-        @queue.size.should == 0
+        expect(@queue.size).to eq(0)
         @queue.push("1")
-        @queue.size.should == 1
+        expect(@queue.size).to eq(1)
       end
 
       it "should be pushable" do
-        @queue.push?.should == true
+        expect(@queue.push?).to eq(true)
       end
 
       it "should not be poppable" do
-        @queue.pop?.should == false
+        expect(@queue.pop?).to eq(false)
       end
     end
 
@@ -72,27 +72,27 @@ describe Agent::Queue do
       end
 
       it "should increase in size when pushed to" do
-        @queue.size.should == 1
+        expect(@queue.size).to eq(1)
         @queue.push("1")
-        @queue.size.should == 2
+        expect(@queue.size).to eq(2)
       end
 
       it "should be able to be popped from" do
-        @queue.pop[0].should == "1"
+        expect(@queue.pop[0]).to eq("1")
       end
 
       it "should decrease in size when popped from" do
-        @queue.size.should == 1
+        expect(@queue.size).to eq(1)
         @queue.pop
-        @queue.size.should == 0
+        expect(@queue.size).to eq(0)
       end
 
       it "should be pushable" do
-        @queue.push?.should == true
+        expect(@queue.push?).to eq(true)
       end
 
       it "should be poppable" do
-        @queue.pop?.should == true
+        expect(@queue.pop?).to eq(true)
       end
     end
 
@@ -102,21 +102,21 @@ describe Agent::Queue do
       end
 
       it "should hold any attempts to push to it" do
-        @queue.operations.should be_empty
+        expect(@queue.operations).to be_empty
         @queue.push("1", :deferred => true)
-        @queue.operations.should_not be_empty
+        expect(@queue.operations).not_to be_empty
       end
 
       it "should be able to be popped from" do
-        @queue.pop[0].should == "1"
+        expect(@queue.pop[0]).to eq("1")
       end
 
       it "should not be pushable" do
-        @queue.push?.should == false
+        expect(@queue.push?).to eq(false)
       end
 
       it "should be poppable" do
-        @queue.pop?.should == true
+        expect(@queue.pop?).to eq(true)
       end
     end
 
@@ -126,51 +126,51 @@ describe Agent::Queue do
       end
 
       it "should go from open to closed" do
-        @queue.should_not be_closed
-        @queue.should be_open
+        expect(@queue).not_to be_closed
+        expect(@queue).to be_open
         @queue.close
-        @queue.should be_closed
-        @queue.should_not be_open
+        expect(@queue).to be_closed
+        expect(@queue).not_to be_open
       end
 
       it "should close all the waiting operations" do
-        @push1.should be_sent
-        @push2.should be_sent
-        @push3.should_not be_sent
-        @push3.should_not be_closed
+        expect(@push1).to be_sent
+        expect(@push2).to be_sent
+        expect(@push3).not_to be_sent
+        expect(@push3).not_to be_closed
 
         @queue.close
 
-        @push3.should be_closed
+        expect(@push3).to be_closed
       end
 
       it "should clear all waiting operations" do
-        @queue.operations.size.should   == 1
-        @queue.pushes.size.should == 1
+        expect(@queue.operations.size).to   eq(1)
+        expect(@queue.pushes.size).to eq(1)
         @queue.close
-        @queue.operations.size.should == 0
-        @queue.pushes.size.should == 0
+        expect(@queue.operations.size).to eq(0)
+        expect(@queue.pushes.size).to eq(0)
       end
 
       it "should clear all elements at rest" do
-        @queue.queue.size.should == 2
+        expect(@queue.queue.size).to eq(2)
         @queue.close
-        @queue.queue.size.should == 0
+        expect(@queue.queue.size).to eq(0)
       end
 
       context "after it is closed" do
         before{ @queue.close }
 
         it "should raise an error when #close is called again" do
-          lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
+          expect{ @queue.close }.to raise_error(Agent::Errors::ChannelClosed)
         end
 
         it "should raise an error when a value is pushed onto the queue" do
-          lambda{ @queue.push("1") }.should raise_error(Agent::Errors::ChannelClosed)
+          expect{ @queue.push("1") }.to raise_error(Agent::Errors::ChannelClosed)
         end
 
         it "should return [nil, false] when popping from the queue" do
-          @queue.pop.should == [nil, false]
+          expect(@queue.pop).to eq([nil, false])
         end
       end
     end
@@ -185,9 +185,9 @@ describe Agent::Queue do
         @queue.remove_operations(removable_pushes)
         while @queue.pop?
           i = @queue.pop[0]
-          i.should_not be_nil
-          i.should_not == "6"
-          i.should_not == "7"
+          expect(i).not_to be_nil
+          expect(i).not_to eq("6")
+          expect(i).not_to eq("7")
         end
       end
     end
@@ -199,11 +199,11 @@ describe Agent::Queue do
     end
 
     it "should not be buffered" do
-      @queue.should_not be_buffered
+      expect(@queue).not_to be_buffered
     end
 
     it "should be unbuffered" do
-      @queue.should be_unbuffered
+      expect(@queue).to be_unbuffered
     end
 
     it "should enqueue and dequeue in order" do
@@ -213,32 +213,32 @@ describe Agent::Queue do
 
       20.times do |i|
         o = @queue.pop[0].to_i
-        o.should > previous
+        expect(o).to be > previous
         previous = o
       end
     end
 
     context "when there are no operations waiting" do
       it "should not be poppable" do
-        @queue.pop?.should == false
+        expect(@queue.pop?).to eq(false)
       end
 
       it "should not be pushable" do
-        @queue.push?.should == false
+        expect(@queue.push?).to eq(false)
       end
 
       it "should queue pushes" do
-        @queue.operations.size.should == 0
+        expect(@queue.operations.size).to eq(0)
         push = @queue.push("1", :deferred => true)
-        push.should_not be_sent
-        @queue.operations.size.should == 1
+        expect(push).not_to be_sent
+        expect(@queue.operations.size).to eq(1)
       end
 
       it "should queue pops" do
-        @queue.operations.size.should == 0
+        expect(@queue.operations.size).to eq(0)
         pop = @queue.pop(:deferred => true)
-        pop.should_not be_received
-        @queue.operations.size.should == 1
+        expect(pop).not_to be_received
+        expect(@queue.operations.size).to eq(1)
       end
     end
 
@@ -248,25 +248,25 @@ describe Agent::Queue do
       end
 
       it "should not be poppable" do
-        @queue.pop?.should == false
+        expect(@queue.pop?).to eq(false)
       end
 
       it "should be pushable" do
-        @queue.push?.should == true
+        expect(@queue.push?).to eq(true)
       end
 
       it "should execute a push and the waiting pop immediately" do
         push = @queue.push("1", :deferred => true)
-        @pop.should be_received
-        push.should be_sent
-        @pop.object.should == "1"
+        expect(@pop).to be_received
+        expect(push).to be_sent
+        expect(@pop.object).to eq("1")
       end
 
       it "should queue pops" do
-        @queue.operations.size.should == 1
+        expect(@queue.operations.size).to eq(1)
         pop = @queue.pop(:deferred => true)
-        pop.should_not be_received
-        @queue.operations.size.should == 2
+        expect(pop).not_to be_received
+        expect(@queue.operations.size).to eq(2)
       end
     end
 
@@ -276,25 +276,25 @@ describe Agent::Queue do
       end
 
       it "should be poppable" do
-        @queue.pop?.should == true
+        expect(@queue.pop?).to eq(true)
       end
 
       it "should not be pushable" do
-        @queue.push?.should == false
+        expect(@queue.push?).to eq(false)
       end
 
       it "should queue pushes" do
-        @queue.operations.size.should == 1
+        expect(@queue.operations.size).to eq(1)
         push = @queue.push("1", :deferred => true)
-        push.should_not be_sent
-        @queue.operations.size.should == 2
+        expect(push).not_to be_sent
+        expect(@queue.operations.size).to eq(2)
       end
 
       it "should execute a pop and the waiting push immediately" do
         pop = @queue.pop(:deferred => true)
-        @push.should be_sent
-        pop.should be_received
-        pop.object.should == "1"
+        expect(@push).to be_sent
+        expect(pop).to be_received
+        expect(pop.object).to eq("1")
       end
     end
 
@@ -304,46 +304,46 @@ describe Agent::Queue do
       end
 
       it "should go from open to closed" do
-        @queue.should_not be_closed
-        @queue.should be_open
+        expect(@queue).not_to be_closed
+        expect(@queue).to be_open
         @queue.close
-        @queue.should be_closed
-        @queue.should_not be_open
+        expect(@queue).to be_closed
+        expect(@queue).not_to be_open
       end
 
       it "should close all the waiting operations" do
-        @push1.should_not be_sent
-        @push1.should_not be_closed
-        @push2.should_not be_sent
-        @push2.should_not be_closed
+        expect(@push1).not_to be_sent
+        expect(@push1).not_to be_closed
+        expect(@push2).not_to be_sent
+        expect(@push2).not_to be_closed
 
         @queue.close
 
-        @push1.should be_closed
-        @push2.should be_closed
+        expect(@push1).to be_closed
+        expect(@push2).to be_closed
       end
 
       it "should clear all waiting operations" do
-        @queue.operations.size.should   == 2
-        @queue.pushes.size.should == 2
+        expect(@queue.operations.size).to   eq(2)
+        expect(@queue.pushes.size).to eq(2)
         @queue.close
-        @queue.operations.size.should == 0
-        @queue.pushes.size.should == 0
+        expect(@queue.operations.size).to eq(0)
+        expect(@queue.pushes.size).to eq(0)
       end
 
       context "after it is closed" do
         before{ @queue.close }
 
         it "should raise an error when #close is called again" do
-          lambda{ @queue.close }.should raise_error(Agent::Errors::ChannelClosed)
+          expect{ @queue.close }.to raise_error(Agent::Errors::ChannelClosed)
         end
 
         it "should raise an error when a value is pushed onto the queue" do
-          lambda{ @queue.push("1") }.should raise_error(Agent::Errors::ChannelClosed)
+          expect{ @queue.push("1") }.to raise_error(Agent::Errors::ChannelClosed)
         end
 
         it "should return [nil, false] when popping from the queue" do
-          @queue.pop.should == [nil, false]
+          expect(@queue.pop).to eq([nil, false])
         end
       end
     end
@@ -358,9 +358,9 @@ describe Agent::Queue do
         @queue.remove_operations(removable_pushes)
         while @queue.pop?
           i = @queue.pop[0]
-          i.should_not be_nil
-          i.should_not == "6"
-          i.should_not == "7"
+          expect(i).not_to be_nil
+          expect(i).not_to eq("6")
+          expect(i).not_to eq("7")
         end
       end
     end

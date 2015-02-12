@@ -6,10 +6,10 @@ describe Agent::Error do
   end
 
   it "should create an error" do
-    @error.to_s.should == "msg"
+    expect(@error.to_s).to eq("msg")
   end
 
   it "should match the error's message" do
-    @error.should be_message("msg")
+    expect(@error).to be_message("msg")
   end
 end

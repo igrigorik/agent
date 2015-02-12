@@ -17,17 +17,17 @@ describe Agent::WaitGroup do
 
   it "should decrement the cound when WaitGroup#done is called" do
     @wait_group.add(1)
-    @wait_group.count.should == 1
+    expect(@wait_group.count).to eq(1)
     @wait_group.done
-    @wait_group.count.should == 0
+    expect(@wait_group.count).to eq(0)
   end
 
   it "should error when the count becomes negative via WaitGroup#add" do
-    lambda{ @wait_group.add(-1) }.should raise_error(Agent::Errors::NegativeWaitGroupCount)
+    expect{ @wait_group.add(-1) }.to raise_error(Agent::Errors::NegativeWaitGroupCount)
   end
 
   it "should error when the count becomes negative via WaitGroup#done" do
-    lambda{ @wait_group.done }.should raise_error(Agent::Errors::NegativeWaitGroupCount)
+    expect{ @wait_group.done }.to raise_error(Agent::Errors::NegativeWaitGroupCount)
   end
 
   it "should allow waiting on a wait_group and should signal when it is done" do
@@ -39,7 +39,7 @@ describe Agent::WaitGroup do
 
     @wait_group.wait
 
-    (Time.now - t).should be_within(0.01).of(0.2)
+    expect(Time.now - t).to be_within(0.01).of(0.2)
   end
 
 end

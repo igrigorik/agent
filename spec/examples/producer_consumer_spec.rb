@@ -66,8 +66,8 @@ describe "Producer-Consumer" do
     go!(c, 3, s, &consumer)
 
     messages = [s.pop[0], s.pop[0]]
-    messages.should include("producer finished")
-    messages.should include("consumer finished")
+    expect(messages).to include("producer finished")
+    expect(messages).to include("consumer finished")
 
     c.close
     s.close
@@ -85,9 +85,9 @@ describe "Producer-Consumer" do
 
     go!(g, &producer)
 
-    c.receive[0].should == 1
-    c.receive[0].should == 2
-    c.receive[0].should == 3
+    expect(c.receive[0]).to eq(1)
+    expect(c.receive[0]).to eq(2)
+    expect(c.receive[0]).to eq(3)
     c.close
   end
 end

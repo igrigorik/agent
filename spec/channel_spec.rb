@@ -5,13 +5,13 @@ describe Agent::Channel do
   context "naming" do
     it "should not be required" do
       c = nil
-      lambda { c = channel!(String) }.should_not raise_error
+      expect { c = channel!(String) }.not_to raise_error
       c.close
     end
 
     it "be able to be set" do
       c = channel!(String, :name => "gibberish")
-      c.name.should == "gibberish"
+      expect(c.name).to eq("gibberish")
       c.close
     end
   end
@@ -24,14 +24,14 @@ describe Agent::Channel do
     it "should support send only" do
       c = channel!(String, 3, :direction => :send)
 
-      lambda { c << "hello"   }.should_not raise_error
-      lambda { c.push "hello" }.should_not raise_error
-      lambda { c.send "hello" }.should_not raise_error
+      expect { c << "hello"   }.not_to raise_error
+      expect { c.push "hello" }.not_to raise_error
+      expect { c.send "hello" }.not_to raise_error
 
-      c.direction.should == :send
+      expect(c.direction).to eq(:send)
 
-      lambda { c.pop }.should raise_error Agent::Errors::InvalidDirection
-      lambda { c.receive }.should raise_error Agent::Errors::InvalidDirection
+      expect { c.pop }.to raise_error Agent::Errors::InvalidDirection
+      expect { c.receive }.to raise_error Agent::Errors::InvalidDirection
 
       c.close
     end
@@ -39,11 +39,11 @@ describe Agent::Channel do
     it "should support receive only" do
       c = channel!(String, :direction => :receive)
 
-      lambda { c << "hello"   }.should raise_error Agent::Errors::InvalidDirection
-      lambda { c.push "hello" }.should raise_error Agent::Errors::InvalidDirection
-      lambda { c.send "hello" }.should raise_error Agent::Errors::InvalidDirection
+      expect { c << "hello"   }.to raise_error Agent::Errors::InvalidDirection
+      expect { c.push "hello" }.to raise_error Agent::Errors::InvalidDirection
+      expect { c.send "hello" }.to raise_error Agent::Errors::InvalidDirection
 
-      c.direction.should == :receive
+      expect(c.direction).to eq(:receive)
 
       # timeout blocking receive calls
       timed_out = false
@@ -51,29 +51,29 @@ describe Agent::Channel do
         s.case(c, :receive)
         s.timeout(0.1){ timed_out = true }
       end
-      timed_out.should == true
+      expect(timed_out).to eq(true)
       c.close
     end
 
     it "should default to bi-directional communication" do
       c = channel!(String, 1)
-      lambda { c.send "hello" }.should_not raise_error
-      lambda { c.receive }.should_not raise_error
+      expect { c.send "hello" }.not_to raise_error
+      expect { c.receive }.not_to raise_error
 
-      c.direction.should == :bidirectional
+      expect(c.direction).to eq(:bidirectional)
     end
 
     it "should be able to be dup'd as a uni-directional channel" do
       c = channel!(String, 1)
 
       send_only = c.as_send_only
-      send_only.direction.should == :send
+      expect(send_only.direction).to eq(:send)
 
       receive_only = c.as_receive_only
-      receive_only.direction.should == :receive
+      expect(receive_only.direction).to eq(:receive)
 
       send_only.send("nifty")
-      receive_only.receive[0].should == "nifty"
+      expect(receive_only.receive[0]).to eq("nifty")
     end
   end
 
@@ -83,35 +83,35 @@ describe Agent::Channel do
     end
 
     it "not raise an error the first time it is called" do
-      lambda { @c.close }.should_not raise_error
-      @c.closed?.should be_true
+      expect { @c.close }.not_to raise_error
+      expect(@c).to be_closed
     end
 
     it "should raise an error the second time it is called" do
       @c.close
-      lambda { @c.close }.should raise_error(Agent::Errors::ChannelClosed)
+      expect { @c.close }.to raise_error(Agent::Errors::ChannelClosed)
     end
 
     it "should respond to closed?" do
-      @c.closed?.should be_false
+      expect(@c).not_to be_closed
       @c.close
-      @c.closed?.should be_true
+      expect(@c).to be_closed
     end
 
     it "should return that a receive was a failure when a channel is closed while being read from" do
       go!{ sleep 0.01; @c.close }
       _, ok = @c.receive
-      ok.should be_false
+      expect(ok).to eq(false)
     end
 
     it "should raise an error when sending to a channel that has already been closed" do
       @c.close
-      lambda { @c.send("a") }.should raise_error(Agent::Errors::ChannelClosed)
+      expect { @c.send("a") }.to raise_error(Agent::Errors::ChannelClosed)
     end
 
     it "should return [nil, false] when receiving from a channel that has already been closed" do
       @c.close
-      @c.receive.should == [nil, false]
+      expect(@c.receive).to eq([nil, false])
     end
   end
 
@@ -121,28 +121,28 @@ describe Agent::Channel do
     end
 
     it "should deadlock on single thread", :vm => :ruby do
-      lambda { @c.receive }.should raise_error
+      expect { @c.receive }.to raise_error
     end
 
     it "should not deadlock with multiple threads" do
       go!{ sleep(0.1); @c.push "hi" }
-      lambda { @c.receive }.should_not raise_error
+      expect { @c.receive }.not_to raise_error
     end
   end
 
   context "typed" do
     it "should create a typed channel" do
-      lambda { channel! }.should raise_error Agent::Errors::Untyped
+      expect { channel! }.to raise_error Agent::Errors::Untyped
       c = nil
-      lambda { c = channel!(Integer) }.should_not raise_error
+      expect { c = channel!(Integer) }.not_to raise_error
       c.close
     end
 
     it "should reject messages of invalid type" do
       c = channel!(String)
       go!{ c.receive }
-      lambda { c.send 1 }.should raise_error(Agent::Errors::InvalidType)
-      lambda { c.send "hello" }.should_not raise_error
+      expect { c.send 1 }.to raise_error(Agent::Errors::InvalidType)
+      expect { c.send "hello" }.not_to raise_error
       c.close
     end
   end
@@ -158,9 +158,9 @@ describe Agent::Channel do
       c = channel!(String)
 
       go!{ sleep(0.15); c.send("hello") }
-      c.receive[0].should == "hello"
+      expect(c.receive[0]).to eq("hello")
 
-      (Time.now - n).should be_within(0.05).of(0.15)
+      expect(Time.now - n).to be_within(0.05).of(0.15)
     end
 
     it "should support buffered" do
@@ -175,8 +175,8 @@ describe Agent::Channel do
         s.timeout(0.1)
       end
 
-      c.receive[0].should == "hello 1"
-      c.receive[0].should == "hello 2"
+      expect(c.receive[0]).to eq("hello 1")
+      expect(c.receive[0]).to eq("hello 2")
       select! do |s|
         s.case(c, :receive){|v| r.push(v) }
         s.timeout(0.1)
@@ -201,15 +201,15 @@ describe Agent::Channel do
     # - http://golang.org/doc/effective_go.html#chan_of_chan
 
     it "should be a first class, serializable value" do
-      lambda { Marshal.dump(@c) }.should_not raise_error
-      lambda { Marshal.load(Marshal.dump(@c)).is_a?(Agent::Channel) }.should_not raise_error
+      expect { Marshal.dump(@c) }.not_to raise_error
+      expect { Marshal.load(Marshal.dump(@c)).is_a?(Agent::Channel) }.not_to raise_error
     end
 
     it "should be able to pass as a value on a different channel" do
       @c.send "hello"
 
       cm = Marshal.load(Marshal.dump(@c))
-      cm.receive[0].should == "hello"
+      expect(cm.receive[0]).to eq("hello")
     end
   end
 
@@ -219,21 +219,21 @@ describe Agent::Channel do
       string = "foo"
       c.send(string)
       string_copy = c.receive[0]
-      string_copy.should == string
-      string_copy.object_id.should_not == string.object_id
+      expect(string_copy).to eq(string)
+      expect(string_copy.object_id).not_to eq(string.object_id)
     end
 
     it "skips marshaling when configured to" do
       c = channel!(String, 1, :skip_marshal => true)
       string = "foo"
       c.send(string)
-      c.receive[0].object_id.should == string.object_id
+      expect(c.receive[0].object_id).to eq(string.object_id)
     end
 
     it "skips marshaling for channels by default" do
       c = channel!(Agent::Channel, 1)
       c.send(c)
-      c.receive[0].object_id.should == c.object_id
+      expect(c.receive[0].object_id).to eq(c.object_id)
     end
   end
 end

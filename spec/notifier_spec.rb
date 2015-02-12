@@ -7,28 +7,28 @@ describe Agent::Notifier do
 
   it "should notify using a payload" do
     @notifier.notify(1)
-    @notifier.payload.should == 1
+    expect(@notifier.payload).to eq(1)
   end
 
   it "should acknowledge notification" do
-    @notifier.should_not be_notified
+    expect(@notifier).not_to be_notified
     @notifier.notify(1)
-    @notifier.should be_notified
+    expect(@notifier).to be_notified
   end
 
   it "should only notify once" do
     @notifier.notify(1)
     @notifier.notify(2)
-    @notifier.payload.should == 1
+    expect(@notifier.payload).to eq(1)
   end
 
   it "should return nil when notified for the first time" do
-    @notifier.notify(1).should be_nil
+    expect(@notifier.notify(1)).to be_nil
   end
 
   it "should return an error when notified more than once" do
     @notifier.notify(1)
-    @notifier.notify(2).should be_message("already notified")
+    expect(@notifier.notify(2)).to be_message("already notified")
   end
 
   it "should allow waiting on a notification and should signal when it is notified" do
@@ -37,6 +37,6 @@ describe Agent::Notifier do
     sleep 0.1 # make sure the notifier in the goroutine is waiting
     @notifier.notify(1)
     payload, _ = ack.receive
-    payload.should == 1
+    expect(payload).to eq(1)
   end
 end
