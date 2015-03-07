@@ -61,8 +61,10 @@ module Agent
     def receive(options={})
       check_direction(:receive)
       q = queue
-      return [nil, false] unless q
-      q.pop(options)
+      return q.pop(options) if q
+      pop = Pop.new(options)
+      pop.close
+      return [pop.object, false]
     end
     alias :pop  :receive
 
