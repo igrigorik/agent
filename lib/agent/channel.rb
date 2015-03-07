@@ -64,7 +64,7 @@ module Agent
       return q.pop(options) if q
       pop = Pop.new(options)
       pop.close
-      return [pop.object, false]
+      [pop.object, false]
     end
     alias :pop  :receive
 
