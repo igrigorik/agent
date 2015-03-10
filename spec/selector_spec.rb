@@ -121,6 +121,22 @@ describe Agent::Selector do
       expect(r.first).to eq(:from_closed)
     end
 
+    it "should receive from channels that are closed while selecting on said channels" do
+      r = []
+
+      Thread.new do
+        sleep 0.2
+        @c.close
+      end
+
+      select! do |s|
+        s.case(@c, :receive) { r.push :from_closed }
+      end
+
+      expect(r.size).to eq(1)
+      expect(r.first).to eq(:from_closed)
+    end
+
     it "should raise an error if the channel is closed out from under it and you are sending to it" do
       go!{ sleep 0.25; @c.close }
 
@@ -321,6 +337,22 @@ describe Agent::Selector do
       select! do |s|
         s.case(@c, :receive) { r.push :from_closed }
         s.default { r.push :default }
+      end
+
+      expect(r.size).to eq(1)
+      expect(r.first).to eq(:from_closed)
+    end
+
+    it "should receive from channels that are closed while selecting on said channels" do
+      r = []
+
+      Thread.new do
+        sleep 0.2
+        @c.close
+      end
+
+      select! do |s|
+        s.case(@c, :receive) { r.push :from_closed }
       end
 
       expect(r.size).to eq(1)
