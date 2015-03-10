@@ -108,6 +108,19 @@ describe Agent::Selector do
       expect(r.first).to eq(:default)
     end
 
+    it "should evaluate a matching prior closed channel in preference to the default case" do
+      r = []
+
+      @c.close
+      select! do |s|
+        s.case(@c, :receive) { r.push :from_closed }
+        s.default { r.push :default }
+      end
+
+      expect(r.size).to eq(1)
+      expect(r.first).to eq(:from_closed)
+    end
+
     it "should raise an error if the channel is closed out from under it and you are sending to it" do
       go!{ sleep 0.25; @c.close }
 
@@ -298,6 +311,20 @@ describe Agent::Selector do
 
       expect(r.size).to eq(1)
       expect(r.first).to eq(:default)
+    end
+
+    it "should evaluate a matching prior closed channel in preference to the default case" do
+      r = []
+
+      @c.close
+
+      select! do |s|
+        s.case(@c, :receive) { r.push :from_closed }
+        s.default { r.push :default }
+      end
+
+      expect(r.size).to eq(1)
+      expect(r.first).to eq(:from_closed)
     end
 
     it "should raise an error if the channel is closed out from under it and you are sending to it" do
