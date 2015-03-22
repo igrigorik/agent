@@ -26,7 +26,6 @@ module Agent
       @queue        = Queues.register(@name, @type, @max)
     end
 
-
     # Serialization methods
 
     def marshal_load(ary)
@@ -45,8 +44,8 @@ module Agent
 
     def send(object, options={})
       check_direction(:send)
-      q = queue
-      raise Errors::ChannelClosed unless q
+      raise Errors::ChannelClosed if @closed
+      q = @queue
       q.push(object, {:skip_marshal => @skip_marshal}.merge(options))
     end
     alias :push :send
@@ -55,22 +54,17 @@ module Agent
     def push?; queue.push?; end
     alias :send? :push?
 
-
     # Receiving methods
 
     def receive(options={})
       check_direction(:receive)
       q = queue
-      return q.pop(options) if q
-      pop = Pop.new(options)
-      pop.close
-      [pop.object, false]
+      return q.pop(options)
     end
     alias :pop  :receive
 
     def pop?; queue.pop?; end
     alias :receive? :pop?
-
 
     # Closing methods
 
@@ -79,7 +73,6 @@ module Agent
         raise Errors::ChannelClosed if @closed
         @closed = true
         @queue.close
-        @queue = nil
         Queues.delete(@name)
       end
     end
@@ -100,7 +93,6 @@ module Agent
     def as_receive_only
       as_direction_only(:receive)
     end
-
 
   private
 

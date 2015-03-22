@@ -31,9 +31,11 @@ module Agent
         loop do
           if operation.is_a?(Push)
             if push?
-              operation.receive do |obj|
-                @size += 1
-                queue.push(obj)
+              unless operation.closed?
+                operation.receive do |obj|
+                  @size += 1
+                  queue.push(obj)
+                end
               end
               operations.delete(operation)
               pushes.delete(operation)

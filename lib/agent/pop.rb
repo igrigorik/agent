@@ -28,7 +28,8 @@ module Agent
         until @received || @closed
           @cvar.wait(@mutex)
         end
-        return received?
+        return false if @closed
+        received?
       end
     end
 

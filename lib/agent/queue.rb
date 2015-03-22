@@ -1,10 +1,20 @@
+require "forwardable"
+
 require "agent/queue/buffered"
 require "agent/queue/unbuffered"
 require "agent/errors"
 
 module Agent
   class Queue
-    attr_reader :type, :queue, :operations, :pushes, :pops, :mutex
+    extend Forwardable
+    attr_reader :type, :operations
+
+    # protected attributes
+    attr_reader :mutex, :queue, :pops, :pushes
+    protected :mutex, :queue, :pops, :pushes
+
+    # size is the queue size
+    def_delegators :@queue, :size
 
     def initialize(type)
       @type = type
@@ -47,12 +57,8 @@ module Agent
     def close
       mutex.synchronize do
         raise Errors::ChannelClosed if @closed
-        @closed = true
         @operations.each{|o| o.close }
-        @operations.clear
-        @queue.clear
-        @pushes.clear
-        @pops.clear
+        @closed = true
 
         reset_custom_state
       end
@@ -82,7 +88,7 @@ module Agent
       pop = Pop.new(options)
 
       mutex.synchronize do
-        pop.close if @closed
+        pop.close if @closed and queue.size == 0
         operations << pop
         pops << pop
         process

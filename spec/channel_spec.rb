@@ -79,7 +79,7 @@ describe Agent::Channel do
 
   context "closing" do
     before do
-      @c = channel!(String)
+      @c = channel!(Integer, 3)
     end
 
     it "not raise an error the first time it is called" do
@@ -111,6 +111,16 @@ describe Agent::Channel do
 
     it "should return [nil, false] when receiving from a channel that has already been closed" do
       @c.close
+      expect(@c.receive).to eq([nil, false])
+    end
+
+    it "should return buffered items from a closed channel" do
+      @c << 1
+      @c << 2
+      @c.close
+      expect(@c.receive).to eq([1, true])
+      expect(@c.receive).to eq([2, true])
+      expect(@c.receive).to eq([nil, false])
       expect(@c.receive).to eq([nil, false])
     end
   end
