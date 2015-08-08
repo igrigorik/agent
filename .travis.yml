@@ -1,4 +1,22 @@
+sudo: false  # to run on the new travis container infrastructure
 language: ruby
+addons:
+  apt:
+  packages:
+    - idn
+    - build-essential  # this and following ensure rubinius is setup ok
+    - bison
+    - ruby-dev
+    - rake
+    - lib1g-dev
+    - libyaml-dev
+    - libssl-dev
+    - libreadline-dev
+    - libncurses5-dev
+    - llvm
+    - llvm-dev
+    - libeditline-dev
+    - libedit-dev
 rvm:
   - 1.8.7
   - ree
@@ -13,4 +31,3 @@ rvm:
   - jruby-head
   - rbx-2.2
   - rbx-2.4
-
