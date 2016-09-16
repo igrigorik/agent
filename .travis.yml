@@ -18,16 +18,5 @@ addons:
     - libeditline-dev
     - libedit-dev
 rvm:
-  - 1.8.7
-  - ree
-  - 1.9.2
-  - 1.9.3
-  - 2.0
-  - 2.1
-  - 2.2
-  - ruby-head
-  - jruby-18mode
-  - jruby-19mode
-  - jruby-head
-  - rbx-2.2
-  - rbx-2.4
+  - 2.3
+  - jruby
