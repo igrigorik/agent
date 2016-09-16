@@ -2,7 +2,7 @@ require "spec_helper"
 
 describe Agent::Queue do
 
-  context "with an buffered queue" do
+  context "with a buffered queue" do
     before do
       @queue = Agent::Queue::Buffered.new(String, 2)
     end
@@ -20,7 +20,7 @@ describe Agent::Queue do
       expect{ Agent::Queue::Buffered.new(String, -1) }.to raise_error(Agent::Errors::InvalidQueueSize)
     end
 
-    it "should raise an erro when an object of an invalid type is pushed" do
+    it "should raise an error when an object of an invalid type is pushed" do
       expect { @queue.push(1) }.to raise_error(Agent::Errors::InvalidType)
     end
 
@@ -144,22 +144,8 @@ describe Agent::Queue do
         expect(@push3).to be_closed
       end
 
-      it "should clear all waiting operations" do
-        expect(@queue.operations.size).to   eq(1)
-        expect(@queue.pushes.size).to eq(1)
-        @queue.close
-        expect(@queue.operations.size).to eq(0)
-        expect(@queue.pushes.size).to eq(0)
-      end
-
-      it "should clear all elements at rest" do
-        expect(@queue.queue.size).to eq(2)
-        @queue.close
-        expect(@queue.queue.size).to eq(0)
-      end
-
       context "after it is closed" do
-        before{ @queue.close }
+        before(:example) { @queue.close }
 
         it "should raise an error when #close is called again" do
           expect{ @queue.close }.to raise_error(Agent::Errors::ChannelClosed)
@@ -169,7 +155,9 @@ describe Agent::Queue do
           expect{ @queue.push("1") }.to raise_error(Agent::Errors::ChannelClosed)
         end
 
-        it "should return [nil, false] when popping from the queue" do
+        it "should return the buffered items when popping from the queue" do
+          2.times { expect(@queue.pop).to eq(["1", true]) }
+          expect(@queue.pop).to eq([nil, false])
           expect(@queue.pop).to eq([nil, false])
         end
       end
@@ -321,14 +309,6 @@ describe Agent::Queue do
 
         expect(@push1).to be_closed
         expect(@push2).to be_closed
-      end
-
-      it "should clear all waiting operations" do
-        expect(@queue.operations.size).to   eq(2)
-        expect(@queue.pushes.size).to eq(2)
-        @queue.close
-        expect(@queue.operations.size).to eq(0)
-        expect(@queue.pushes.size).to eq(0)
       end
 
       context "after it is closed" do
